@@ -1,7 +1,8 @@
 extern crate csv;
 
+use csv_debugging::SampleLogger;
 use nih_plug::prelude::*;
-use std::{collections::HashMap, error::Error, fs::File, sync::Arc};
+use std::sync::Arc;
 
 pub mod csv_debugging;
 
@@ -9,11 +10,7 @@ pub struct Compressor {
     params: Arc<CompressorParams>,
     sample_rate: f32,
     envelope: f32,
-
-    #[cfg(feature = "detailed_debugging")]
-    debug_values: HashMap<String, Vec<f32>>,
-    #[cfg(feature = "detailed_debugging")]
-    samples_seen: u64,
+    logger: SampleLogger,
 }
 
 #[derive(Params)]
@@ -32,27 +29,49 @@ struct CompressorParams {
 }
 
 impl Compressor {
-    #[cfg(feature = "detailed_debugging")]
-    fn write_debug_values(&mut self) -> Result<(), Box<dyn Error>> {
-        let max_len = self
-            .debug_values
-            .values()
-            .map(|v| v.len())
-            .max()
-            .unwrap_or(0);
+    fn process_buffer(
+        &mut self,
+        buffer: &mut Buffer,
+        _aux: &mut AuxiliaryBuffers,
+        _context: &mut impl ProcessContext<Self>,
+    ) -> Result<(), &'static str> {
 
-        let file = File::create("debug.csv")?;
-        let mut writer = csv::Writer::from_writer(file);
-
-        writer.write_record(self.debug_values.keys())?;
-
-        for i in 0..max_len {
-            let mut record = csv::StringRecord::new();
-            for value in self.debug_values.values() {
-                let entry = value.get(i).map(|v| v.to_string()).unwrap_or(String::new());
-                record.push_field(entry.as_str());
+        for channel_samples in buffer.iter_samples() {
+            // TODO: can be seen from audio interface right?
+            #[cfg(feature = "detailed_debugging")] {
+                if channel_samples.len() > 1 {
+                    panic!("Too many channels for detailed debugging to support: {:?}", channel_samples.len());
+                }
             }
-            writer.write_record(&record)?;
+
+            let threshold = self.params.threshold.value();
+            let ratio = 1.0 / self.params.ratio.smoothed.next();
+            let attack = self.params.attack.smoothed.next() / 1000.0;
+            let release = self.params.release.smoothed.next() / 1000.0;
+
+            let attack_slope = 1.0 / (self.sample_rate * attack);
+            let release_slope = 1.0 / (self.sample_rate * release);
+
+            for sample in channel_samples {
+                self.logger.write("sample", *sample)?;
+                self.logger.write("envelope", self.envelope)?;
+                self.logger.write("threshold", threshold)?;
+
+                let abs_sample = (*sample).abs();
+                if abs_sample > self.envelope {
+                    self.envelope += attack_slope;
+                } else if abs_sample < self.envelope {
+                    self.envelope -= release_slope;
+                }
+
+                if self.envelope > threshold && *sample > threshold {
+                    *sample = threshold + (*sample - threshold) * ratio;
+                } else if -self.envelope < -threshold && *sample < -threshold {
+                    *sample = -(threshold + (abs_sample - threshold) * ratio);
+                }
+
+                self.logger.write("after", *sample)?;
+            }
         }
 
         Ok(())
@@ -65,11 +84,7 @@ impl Default for Compressor {
             params: Arc::new(CompressorParams::default()),
             sample_rate: 48000.0,
             envelope: 0.0,
-
-            #[cfg(feature = "detailed_debugging")]
-            debug_values: HashMap::new(),
-            #[cfg(feature = "detailed_debugging")]
-            samples_seen: 0,
+            logger: SampleLogger::new(5000),
         }
     }
 }
@@ -157,62 +172,16 @@ impl Plugin for Compressor {
         _aux: &mut AuxiliaryBuffers,
         _context: &mut impl ProcessContext<Self>,
     ) -> ProcessStatus {
-        // TODO: not the right place for this
-        // TODO: building with detailed_debugging gives a lot of warns, signifying that these are not seperated correctly
-        let mut add_to_debug_values = |key: &str, value: f32| {
-            #[cfg(feature = "detailed_debugging")] {
-                self.debug_values.entry(String::from(key))
-                    .or_insert(Vec::new())
-                    .push(value);
-            }
-        };
-        
-        for channel_samples in buffer.iter_samples() {
-            #[cfg(feature = "detailed_debugging")] {
-                if channel_samples.len() > 1 {
-                    panic!("Too many channels for detailed debugging to support: {:?}", channel_samples.len());
+        match self.process_buffer(buffer, _aux, _context) {
+            Ok(_) => return ProcessStatus::Normal,
+            Err(err) => {
+                println!("Processing aborted with: {}", err);
+                match self.logger.write_debug_values() {
+                    Ok(_) => return ProcessStatus::Error("Finished detailed debugging."),
+                    Err(_) => return ProcessStatus::Error(&err),
                 }
-
-                self.samples_seen += 1 as u64;
-                if self.samples_seen > 5000 {
-                    match self.write_debug_values() {
-                        Ok(_) => return ProcessStatus::Normal,
-                        Err(_) => return ProcessStatus::Error("Error writing CSV with debug values")
-                    }
-                }
-            }
-
-            let threshold = self.params.threshold.value();
-            let ratio = 1.0 / self.params.ratio.smoothed.next();
-            let attack = self.params.attack.smoothed.next() / 1000.0;
-            let release = self.params.release.smoothed.next() / 1000.0;
-
-            let attack_slope = 1.0 / (self.sample_rate * attack);
-            let release_slope = 1.0 / (self.sample_rate * release);
-
-            for sample in channel_samples {
-                add_to_debug_values("before", *sample);
-                add_to_debug_values("envelope", self.envelope);
-                add_to_debug_values("threshold", threshold);
-
-                let abs_sample = (*sample).abs();
-                if abs_sample > self.envelope {
-                    self.envelope += attack_slope;
-                } else if abs_sample < self.envelope {
-                    self.envelope -= release_slope;
-                }
-
-                if self.envelope > threshold && *sample > threshold {
-                    *sample = threshold + (*sample - threshold) * ratio;
-                } else if -self.envelope < -threshold && *sample < -threshold {
-                    *sample = -(threshold + (abs_sample - threshold) * ratio);
-                }
-
-                add_to_debug_values("after", *sample);
             }
         }
-
-        ProcessStatus::Normal
     }
 
     // This can be used for cleaning up special resources like socket connections whenever the

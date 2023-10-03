@@ -19,6 +19,8 @@ sine: debug
 	--input=/home/pieter/Coding/rust/compressor/audio/sine_40hz_4s.wav \
 	--output=out.wav \
 	--param=Threshold:-14 \
+	--param=Attack:10 \
+	--param=Release:5 \
 	--overwrite
 	python tools/plot.py debug.csv
 

@@ -3,6 +3,8 @@ extern crate csv;
 use nih_plug::prelude::*;
 use std::{collections::HashMap, error::Error, fs::File, sync::Arc};
 
+pub mod csv_debugging;
+
 pub struct Compressor {
     params: Arc<CompressorParams>,
     sample_rate: f32,

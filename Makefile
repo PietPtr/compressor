@@ -4,7 +4,7 @@ all: build
 build:
 	cargo build
 
-build_detailed_debugging:
+debug:
 	cargo xtask bundle compressor --release --features "detailed_debugging"
 	
 slap: build
@@ -14,12 +14,13 @@ slap: build
 	--param=Threshold:-25 \
 	--overwrite
 
-sine: build_detailed_debugging
+sine: debug
 	plugalyzer process --plugin "/home/pieter/.vst3/Compressor.vst3" \
 	--input=/home/pieter/Coding/rust/compressor/audio/sine_40hz_4s.wav \
 	--output=out.wav \
 	--param=Threshold:-25 \
 	--overwrite
+	./target/bundled/Compressor
 
 clean:
 	cargo clean

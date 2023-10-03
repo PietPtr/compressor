@@ -20,6 +20,8 @@ nih_plug = { git = "https://github.com/robbert-vdh/nih-plug.git", features = ["a
 # the GPL compatibility requirement
 # nih_plug = { git = "https://github.com/robbert-vdh/nih-plug.git", default_features = false, features = ["assert_process_allocs"] }
 csv = "1.1"
+plotters = "0.3.5"
+rand = "0.8.5"
 
 [features]
 detailed_debugging = []

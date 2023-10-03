@@ -158,16 +158,22 @@ impl Plugin for Compressor {
         _context: &mut impl ProcessContext<Self>,
     ) -> ProcessStatus {
         // TODO: not the right place for this
+        // TODO: building with detailed_debugging gives a lot of warns, signifying that these are not seperated correctly
         let mut add_to_debug_values = |key: &str, value: f32| {
-            self.debug_values.entry(String::from(key))
-                .or_insert(Vec::new())
-                .push(value);
+            #[cfg(feature = "detailed_debugging")] {
+                self.debug_values.entry(String::from(key))
+                    .or_insert(Vec::new())
+                    .push(value);
+            }
         };
         
         for channel_samples in buffer.iter_samples() {
-            #[cfg(feature = "detailed_debugging")]
-            {
-                self.samples_seen += 1 as u64; // TODO: broken when several channels present
+            #[cfg(feature = "detailed_debugging")] {
+                if channel_samples.len() > 1 {
+                    panic!("Too many channels for detailed debugging to support: {:?}", channel_samples.len());
+                }
+
+                self.samples_seen += 1 as u64;
                 if self.samples_seen > 5000 {
                     match self.write_debug_values() {
                         Ok(_) => return ProcessStatus::Normal,

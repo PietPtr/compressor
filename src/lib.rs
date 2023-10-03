@@ -37,7 +37,7 @@ impl Compressor {
     ) -> Result<(), &'static str> {
 
         for channel_samples in buffer.iter_samples() {
-            // TODO: can be seen from audio interface right?
+            // TODO: can be seen from audio layout right?
             #[cfg(feature = "detailed_debugging")] {
                 if channel_samples.len() > 1 {
                     panic!("Too many channels for detailed debugging to support: {:?}", channel_samples.len());
@@ -175,17 +175,18 @@ impl Plugin for Compressor {
         match self.process_buffer(buffer, _aux, _context) {
             Ok(_) => return ProcessStatus::Normal,
             Err(err) => {
-                println!("Processing aborted with: {}", err);
-                match self.logger.write_debug_values() {
-                    Ok(_) => return ProcessStatus::Error("Finished detailed debugging."),
-                    Err(_) => return ProcessStatus::Error(&err),
-                }
+                // Also ugly
+                self.logger.write_debug_values().expect("Error writing CSV file");
+                // Ugly, but easiest way to stop plugin right now...
+                panic!("Processing aborted with: {}", err);
+                // match self.logger.write_debug_values() {
+                //     Ok(_) => return ProcessStatus::Error("Finished detailed debugging."),
+                //     Err(_) => return ProcessStatus::Error(&err),
+                // }
             }
         }
     }
 
-    // This can be used for cleaning up special resources like socket connections whenever the
-    // plugin is deactivated. Most plugins won't need to do anything here.
     fn deactivate(&mut self) {}
 }
 

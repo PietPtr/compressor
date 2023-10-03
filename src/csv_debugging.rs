@@ -39,19 +39,23 @@ impl SampleLogger {
     }
 
     pub fn write(&mut self, key: &str, value: f32) -> Result<(), &'static str>{
-        self.debug_values.entry(String::from(key))
-            .or_insert(Vec::new())
-            .push(value);
+        if cfg!(feature = "detailed_debugging") {
+            self.debug_values.entry(String::from(key))
+                .or_insert(Vec::new())
+                .push(value);
 
-        if key == "sample" {
-            self.samples_seen += 1;
+            if key == "sample" {
+                self.samples_seen += 1;
+            }
+
+            if self.samples_seen > self.quit_after_n_samples {
+                return Err("Seen enough samples.");
+            }
+
+            return self.is_logged_correctly()
+        } else {
+            Ok(())
         }
-
-        if self.samples_seen > self.quit_after_n_samples {
-            return Err("Seen enough samples.");
-        }
-
-        self.is_logged_correctly()
     }
 
     fn is_logged_correctly(&self) -> Result<(), &'static str> {
@@ -73,25 +77,29 @@ impl SampleLogger {
     }
 
     pub fn write_debug_values(&mut self) -> Result<(), Box<dyn Error>> {
-        let max_len = self
-            .debug_values
-            .values()
-            .map(|v| v.len())
-            .max()
-            .unwrap_or(0);
+        if cfg!(feature = "detailed_debugging") {
+            self.is_logged_correctly()?;
 
-        let file = File::create("debug.csv")?;
-        let mut writer = csv::Writer::from_writer(file);
+            let max_len = self
+                .debug_values
+                .values()
+                .map(|v| v.len())
+                .max()
+                .unwrap_or(0);
 
-        writer.write_record(self.debug_values.keys())?;
+            let file = File::create("debug.csv")?;
+            let mut writer = csv::Writer::from_writer(file);
 
-        for i in 0..max_len {
-            let mut record = csv::StringRecord::new();
-            for value in self.debug_values.values() {
-                let entry = value.get(i).map(|v| v.to_string()).unwrap_or(String::new());
-                record.push_field(entry.as_str());
+            writer.write_record(self.debug_values.keys())?;
+
+            for i in 0..max_len {
+                let mut record = csv::StringRecord::new();
+                for value in self.debug_values.values() {
+                    let entry = value.get(i).map(|v| v.to_string()).unwrap_or(String::new());
+                    record.push_field(entry.as_str());
+                }
+                writer.write_record(&record)?;
             }
-            writer.write_record(&record)?;
         }
 
         Ok(())

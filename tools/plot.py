@@ -1,7 +1,8 @@
 # This is a seperate Python script because matplotlib can produce a nice interactive viewer much more
-# easily than the plotters library ever could ()
+# easily than the plotters library ever could (056b9854d82a363b49f44ecfddcd65633051df04)
 
 import os
+import sys
 os.environ['QT_QPA_PLATFORM'] = 'xcb'
 
 # Importing required libraries
@@ -30,4 +31,4 @@ def plot_csv(file_path):
     
     plt.show()
 
-plot_csv("debug.csv")
+plot_csv(sys.argv[1])

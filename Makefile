@@ -18,9 +18,9 @@ sine: debug
 	plugalyzer process --plugin "/home/pieter/.vst3/Compressor.vst3" \
 	--input=/home/pieter/Coding/rust/compressor/audio/sine_40hz_4s.wav \
 	--output=out.wav \
-	--param=Threshold:-25 \
+	--param=Threshold:-14 \
 	--overwrite
-	./target/bundled/Compressor
+	python tools/plot.py debug.csv
 
 clean:
 	cargo clean

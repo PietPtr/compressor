@@ -163,18 +163,20 @@ impl Plugin for Compressor {
                 .or_insert(Vec::new())
                 .push(value);
         };
-
+        
         for channel_samples in buffer.iter_samples() {
             #[cfg(feature = "detailed_debugging")]
             {
-                self.samples_seen += channel_samples.len() as u64; // TODO: broken when several channels present
-                if self.samples_seen > 50000 {
-                    self.write_debug_values();
-                    return ProcessStatus::Normal; // TODO: error?
+                self.samples_seen += 1 as u64; // TODO: broken when several channels present
+                if self.samples_seen > 5000 {
+                    match self.write_debug_values() {
+                        Ok(_) => return ProcessStatus::Normal,
+                        Err(_) => return ProcessStatus::Error("Error writing CSV with debug values")
+                    }
                 }
             }
 
-            let threshold = self.params.threshold.smoothed.next();
+            let threshold = self.params.threshold.value();
             let ratio = 1.0 / self.params.ratio.smoothed.next();
             let attack = self.params.attack.smoothed.next() / 1000.0;
             let release = self.params.release.smoothed.next() / 1000.0;
@@ -184,6 +186,8 @@ impl Plugin for Compressor {
 
             for sample in channel_samples {
                 add_to_debug_values("before", *sample);
+                add_to_debug_values("envelope", self.envelope);
+                add_to_debug_values("threshold", threshold);
 
                 let abs_sample = (*sample).abs();
                 if abs_sample > self.envelope {

@@ -20,24 +20,29 @@ def string_to_color(input_string):
     return color
 
 
-def plot_csv(file_path):
+
+def plot_csv2(file_path, sample_rate=44100):
     df = pd.read_csv(file_path)
 
-    plt.figure(figsize=(20, 12))
+    fig, ax = plt.subplots(figsize=(20, 12))
 
     num_samples = len(df)
     time_ms = np.linspace(0, num_samples / sample_rate * 1000, num_samples)
 
-    plt.plot(time_ms, df['sample'], label='sample', color=string_to_color('sample'))
-    
-    for column in sorted([col for col in df.columns if col != 'sample']):
-        plt.plot(time_ms, df[column], label=column, color=string_to_color(column))
+    ax.axhline(y=0, color='#777777', linestyle='-', linewidth=1)
 
-    plt.xlabel('Time (ms)')
-    plt.ylabel('Value')
-    
+    ax.plot(time_ms, df['sample'], label='sample', color=string_to_color('sample'))
+
+    for column in sorted([col for col in df.columns if col != 'sample']):
+        ax.plot(time_ms, df[column], label=column, color=string_to_color(column))
+
+    ax.set_xlabel('Time (ms)')
+    ax.set_ylabel('Value')
+
     plt.legend()
-    
+
+    fig.canvas.manager.window.setGeometry(2660, 100, 2300, 1210)
+
     plt.show()
 
-plot_csv(sys.argv[1])
+plot_csv2(sys.argv[1])

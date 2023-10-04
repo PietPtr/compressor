@@ -26,6 +26,10 @@ struct CompressorParams {
 
     #[id = "release"]
     pub release: FloatParam, // [0, inf), milliseconds
+
+    #[cfg(feature = "detailed_debugging")]
+    #[id = "logger_length"]
+    pub logger_length: FloatParam,
 }
 
 impl Compressor {
@@ -35,6 +39,8 @@ impl Compressor {
         _aux: &mut AuxiliaryBuffers,
         _context: &mut impl ProcessContext<Self>,
     ) -> Result<(), &'static str> {
+        #[cfg(feature = "detailed_debugging")]
+        self.logger.set_quit_after_n_samples(self.params.logger_length.value());
 
         for channel_samples in buffer.iter_samples() {
             // TODO: can be seen from audio layout right?
@@ -44,18 +50,22 @@ impl Compressor {
                 }
             }
 
+            // TODO: make smoothed.next() instead of value
             let threshold = self.params.threshold.value();
-            let ratio = 1.0 / self.params.ratio.smoothed.next();
-            let attack = self.params.attack.smoothed.next() / 1000.0;
-            let release = self.params.release.smoothed.next() / 1000.0;
+            let ratio_denom = self.params.ratio.value();
+            let attack = self.params.attack.value() / 1000.0;
+            let release = self.params.release.value() / 1000.0;
 
             let attack_slope = 1.0 / (self.sample_rate * attack);
             let release_slope = 1.0 / (self.sample_rate * release);
+
+            let envelope_scaler = 1.0 / (1.0 - threshold);
 
             for sample in channel_samples {
                 self.logger.write("sample", *sample)?;
                 self.logger.write("envelope", self.envelope)?;
                 self.logger.write("threshold", threshold)?;
+                self.logger.write("-threshold", -threshold)?;
 
                 let abs_sample = (*sample).abs();
                 if abs_sample > self.envelope {
@@ -64,12 +74,15 @@ impl Compressor {
                     self.envelope -= release_slope;
                 }
 
+                let ratio = 1.0 / (((self.envelope - threshold) * envelope_scaler) * (ratio_denom - 1.0) + 1.0);
+
                 if self.envelope > threshold && *sample > threshold {
                     *sample = threshold + (*sample - threshold) * ratio;
                 } else if -self.envelope < -threshold && *sample < -threshold {
                     *sample = -(threshold + (abs_sample - threshold) * ratio);
                 }
 
+                self.logger.write("ratio", if self.envelope > threshold { ratio } else { 1.0 })?;
                 self.logger.write("after", *sample)?;
             }
         }
@@ -84,7 +97,7 @@ impl Default for Compressor {
             params: Arc::new(CompressorParams::default()),
             sample_rate: 48000.0,
             envelope: 0.0,
-            logger: SampleLogger::new(5000),
+            logger: SampleLogger::new(),
         }
     }
 }
@@ -109,7 +122,7 @@ impl Default for CompressorParams {
 
             ratio: FloatParam::new(
                 "Ratio",
-                4.0,
+                2.0,
                 FloatRange::Skewed {
                     min: 1.0,
                     max: 200.0,
@@ -139,6 +152,13 @@ impl Default for CompressorParams {
             )
             .with_smoother(SmoothingStyle::Linear(1.0))
             .with_unit(" ms"),
+
+            #[cfg(feature = "detailed_debugging")]
+            logger_length: FloatParam::new(
+                "LoggerLength",
+                5000.0,
+                FloatRange::Linear { min: 0.0, max: u64::MAX as f32 }
+            ),
         }
     }
 }
@@ -164,6 +184,15 @@ impl Plugin for Compressor {
 
     fn params(&self) -> Arc<dyn Params> {
         self.params.clone()
+    }
+
+    fn initialize(
+        &mut self,
+        _audio_io_layout: &AudioIOLayout,
+        _buffer_config: &BufferConfig,
+        _context: &mut impl InitContext<Self>,
+    ) -> bool {
+        true
     }
 
     fn process(

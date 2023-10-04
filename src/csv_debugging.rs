@@ -26,15 +26,15 @@ pub fn read_csv_as_audio_data(filename: String) -> Result<HashMap<String, Vec<f3
 pub struct SampleLogger {
     debug_values: HashMap<String, Vec<f32>>,
     samples_seen: u64,
-    quit_after_n_samples: u64,
+    quit_after_n_samples: Option<u64>,
 }
 
 impl SampleLogger {
-    pub fn new(quit_after_n_samples: u64) -> Self {
+    pub fn new() -> Self {
         Self {
             debug_values: HashMap::new(),
             samples_seen: 0,
-            quit_after_n_samples,
+            quit_after_n_samples: None,
         }
     }
 
@@ -48,7 +48,7 @@ impl SampleLogger {
                 self.samples_seen += 1;
             }
 
-            if self.samples_seen > self.quit_after_n_samples {
+            if self.samples_seen > self.quit_after_n_samples.unwrap_or(u64::MAX) {
                 return Err("Seen enough samples.");
             }
 
@@ -56,6 +56,10 @@ impl SampleLogger {
         } else {
             Ok(())
         }
+    }
+
+    pub fn set_quit_after_n_samples(&mut self, samples: f32) {
+        self.quit_after_n_samples = Some(samples as u64);
     }
 
     fn is_logged_correctly(&self) -> Result<(), &'static str> {

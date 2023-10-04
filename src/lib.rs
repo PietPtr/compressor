@@ -2,9 +2,11 @@ extern crate csv;
 
 use csv_debugging::SampleLogger;
 use nih_plug::prelude::*;
+use nih_plug_vizia::ViziaState;
 use std::sync::Arc;
 
 pub mod csv_debugging;
+mod editor;
 
 pub struct Compressor {
     params: Arc<CompressorParams>,
@@ -15,20 +17,19 @@ pub struct Compressor {
 
 #[derive(Params)]
 struct CompressorParams {
+    #[persist = "editor-state"]
+    editor_state: Arc<ViziaState>,
+
     #[id = "threshold"]
     pub threshold: FloatParam, // stored as gain, entered in dB
-
     #[id = "ratio"]
     pub ratio: FloatParam, // [1, inf)
-
     #[id = "attack"]
     pub attack: FloatParam, // [0, inf), milliseconds
-
     #[id = "release"]
     pub release: FloatParam, // [0, inf), milliseconds
-
     #[id = "steepness"]
-    pub steepness: FloatParam,
+    pub steepness: FloatParam, // [0, inf)
 
     #[cfg(feature = "detailed_debugging")]
     #[id = "logger_length"]
@@ -54,10 +55,10 @@ impl Compressor {
             }
 
             // TODO: make smoothed.next() instead of value
-            let threshold = self.params.threshold.value();
-            let ratio_denom = self.params.ratio.value();
-            let attack = self.params.attack.value() / 1000.0;
-            let release = self.params.release.value() / 1000.0;
+            let threshold = self.params.threshold.smoothed.next();
+            let ratio_denom = self.params.ratio.smoothed.next();
+            let attack = self.params.attack.smoothed.next() / 1000.0;
+            let release = self.params.release.smoothed.next() / 1000.0;
             let steepness = self.params.steepness.smoothed.next();
 
             let attack_slope = 1.0 / (self.sample_rate * attack);
@@ -82,7 +83,6 @@ impl Compressor {
                     self.envelope
                 };
                 
-
                 let ratio = 1.0 / (((self.envelope - threshold) * envelope_scaler) * (ratio_denom - 1.0) + 1.0);
 
                 let wet = if self.envelope > threshold && *sample > threshold {
@@ -124,6 +124,7 @@ impl Default for Compressor {
 impl Default for CompressorParams {
     fn default() -> Self {
         Self {
+            editor_state: editor::default_state(),
             threshold: FloatParam::new(
                 "Threshold",
                 util::db_to_gain(-7.0),
@@ -209,6 +210,10 @@ impl Plugin for Compressor {
 
     fn params(&self) -> Arc<dyn Params> {
         self.params.clone()
+    }
+
+    fn editor(&mut self, _async_executor: AsyncExecutor<Self>) -> Option<Box<dyn Editor>> {
+        editor::create(self.params.clone(), self.params.editor_state.clone())
     }
 
     fn initialize(

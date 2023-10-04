@@ -6,7 +6,10 @@ build:
 
 debug:
 	cargo xtask bundle compressor --release --features "detailed_debugging"
-	
+
+gui: build
+	./target/bundled/Compressor
+
 slap: build
 	plugalyzer process --plugin /home/pieter/.vst3/Compressor.vst3 \
 	--input=/home/pieter/Coding/rust/compressor/audio/slap.wav \

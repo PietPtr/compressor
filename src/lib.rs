@@ -27,6 +27,9 @@ struct CompressorParams {
     #[id = "release"]
     pub release: FloatParam, // [0, inf), milliseconds
 
+    #[id = "steepness"]
+    pub steepness: FloatParam,
+
     #[cfg(feature = "detailed_debugging")]
     #[id = "logger_length"]
     pub logger_length: FloatParam,
@@ -55,6 +58,7 @@ impl Compressor {
             let ratio_denom = self.params.ratio.value();
             let attack = self.params.attack.value() / 1000.0;
             let release = self.params.release.value() / 1000.0;
+            let steepness = self.params.steepness.smoothed.next();
 
             let attack_slope = 1.0 / (self.sample_rate * attack);
             let release_slope = 1.0 / (self.sample_rate * release);
@@ -76,13 +80,22 @@ impl Compressor {
 
                 let ratio = 1.0 / (((self.envelope - threshold) * envelope_scaler) * (ratio_denom - 1.0) + 1.0);
 
-                if self.envelope > threshold && *sample > threshold {
-                    *sample = threshold + (*sample - threshold) * ratio;
+                let wet = if self.envelope > threshold && *sample > threshold {
+                    threshold + (*sample - threshold) * ratio
                 } else if -self.envelope < -threshold && *sample < -threshold {
-                    *sample = -(threshold + (abs_sample - threshold) * ratio);
-                }
+                    -(threshold + (abs_sample - threshold) * ratio)
+                } else {
+                    *sample
+                };
 
-                self.logger.write("ratio", if self.envelope > threshold { ratio } else { 1.0 })?;
+                let sigmoid = |x: f32| 1.0 / (1.0 + (steepness * x).exp());
+
+                let distance_from_threshold = threshold - abs_sample;
+
+                let mix = sigmoid(distance_from_threshold);
+                *sample = *sample * (1.0 - mix) + wet * mix;
+
+                self.logger.write("mix", mix)?;
                 self.logger.write("after", *sample)?;
             }
         }
@@ -152,6 +165,13 @@ impl Default for CompressorParams {
             )
             .with_smoother(SmoothingStyle::Linear(1.0))
             .with_unit(" ms"),
+
+            steepness: FloatParam::new(
+                "Steepness",
+                30.0,
+                FloatRange::Linear { min: 5.0, max: 100.0 },
+            )
+            .with_smoother(SmoothingStyle::Linear(1.0)),
 
             #[cfg(feature = "detailed_debugging")]
             logger_length: FloatParam::new(

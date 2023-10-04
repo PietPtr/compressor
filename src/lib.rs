@@ -67,16 +67,21 @@ impl Compressor {
 
             for sample in channel_samples {
                 self.logger.write("sample", *sample)?;
+                self.logger.write("sample.abs()", (*sample).abs())?;
                 self.logger.write("envelope", self.envelope)?;
                 self.logger.write("threshold", threshold)?;
                 self.logger.write("-threshold", -threshold)?;
 
                 let abs_sample = (*sample).abs();
-                if abs_sample > self.envelope {
-                    self.envelope += attack_slope;
+
+                self.envelope = if abs_sample > self.envelope {
+                    (self.envelope + attack_slope).min(abs_sample)
                 } else if abs_sample < self.envelope {
-                    self.envelope -= release_slope;
-                }
+                    (self.envelope - release_slope).max(abs_sample)
+                } else {
+                    self.envelope
+                };
+                
 
                 let ratio = 1.0 / (((self.envelope - threshold) * envelope_scaler) * (ratio_denom - 1.0) + 1.0);
 

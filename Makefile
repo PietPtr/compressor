@@ -62,7 +62,7 @@ triangle: debug
 	--param=Attack:0 \
 	--param=Release:1000 \
 	--param=Ratio:4 \
-	--param=Steepness:30 \
+	--param=Steepness:10 \
 	--param=LoggerLength:1000 \
 	--overwrite
 	python tools/plot.py debug.csv

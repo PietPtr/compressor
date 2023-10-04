@@ -19,6 +19,11 @@ def string_to_color(input_string):
     color = '#' + hex_dig[:6]
     return color
 
+def plot_sample_lines(ax, length, sample_rate=44100):
+    if length > 5000:
+        return # Too long, takes too much time
+    for i in range(length):
+        ax.axvline(x=i/(sample_rate / 1000.0), color='#777777', linestyle='-', linewidth=0.1)
 
 
 def plot_csv2(file_path, sample_rate=44100):
@@ -30,6 +35,7 @@ def plot_csv2(file_path, sample_rate=44100):
     time_ms = np.linspace(0, num_samples / sample_rate * 1000, num_samples)
 
     ax.axhline(y=0, color='#777777', linestyle='-', linewidth=1)
+    plot_sample_lines(ax, num_samples)
 
     ax.plot(time_ms, df['sample'], label='sample', color=string_to_color('sample'))
 

@@ -2,11 +2,13 @@ use nih_plug::prelude::Editor;
 use nih_plug_vizia::vizia::prelude::*;
 use nih_plug_vizia::{assets, widgets::*};
 use nih_plug_vizia::{create_vizia_editor, ViziaState, ViziaTheming};
-// mod param_knob; // for modules defined in the editor/ directory
+mod knob;
 
 use std::sync::Arc;
 
 use crate::CompressorParams;
+
+use self::knob::ParamKnob;
 
 // TODO: should be loaded from a file (using include_str!() macro?)
 const STYLE: &str = r#""#;
@@ -19,7 +21,7 @@ struct Data {
 impl Model for Data {}
 
 pub(crate) fn default_state() -> Arc<ViziaState> {
-    ViziaState::new(|| (350, 200))
+    ViziaState::new(|| (720, 440))
 }
 
 pub(crate) fn create(
@@ -38,6 +40,13 @@ pub(crate) fn create(
 
         ResizeHandle::new(cx);
 
-
+        HStack::new(cx, |cx| {
+            ParamKnob::new(cx, Data::params, |p| &p.threshold);
+            ParamKnob::new(cx, Data::params, |p| &p.ratio);
+            ParamKnob::new(cx, Data::params, |p| &p.attack);
+            ParamKnob::new(cx, Data::params, |p| &p.release);
+            ParamKnob::new(cx, Data::params, |p| &p.steepness);
+        })
+        .child_space(Stretch(1.0));
     })
 }

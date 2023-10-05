@@ -9,9 +9,12 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 import hashlib
+import tkinter as tk
 
 sample_rate = 44100
 
+root = tk.Tk()
+screen_width = root.winfo_screenwidth()
 
 def string_to_color(input_string):
     hash_object = hashlib.md5(input_string.encode())
@@ -29,7 +32,7 @@ def plot_sample_lines(ax, length, sample_rate=44100):
 def plot_csv2(file_path, sample_rate=44100):
     df = pd.read_csv(file_path)
 
-    fig, ax = plt.subplots(figsize=(20, 12))
+    fig, ax = plt.subplots(figsize=(13, 7))
 
     num_samples = len(df)
     time_ms = np.linspace(0, num_samples / sample_rate * 1000, num_samples)
@@ -47,7 +50,10 @@ def plot_csv2(file_path, sample_rate=44100):
 
     plt.legend()
 
-    fig.canvas.manager.window.setGeometry(2660, 100, 2300, 1210)
+    if screen_width > 2560:
+        fig.canvas.manager.window.setGeometry(2660, 100, 2300, 1210)
+
+    fig.canvas.manager.set_window_title("Float")
 
     plt.show()
 

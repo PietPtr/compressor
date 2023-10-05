@@ -90,12 +90,23 @@ impl ParamKnob {
                                     cx,
                                     Percentage(80.),
                                     Pixels(4.),
-                                    Pixels(20.),
+                                    Pixels(15.),
                                     300.0,
                                     KnobMode::Continuous,
                                 )
                                 .value(lens.clone())
-                                .class("tick")
+                                .class("tick");
+                                ArcTrack::new(
+                                    cx,
+                                    false,
+                                    Percentage(95.0),
+                                    Percentage(10.0),
+                                    -150.0,
+                                    150.0,
+                                    KnobMode::Continuous,
+                                )
+                                .value(lens)
+                                .class("track")
                             },
                         )
                         .on_mouse_down(move |cx, _button| {

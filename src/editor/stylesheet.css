@@ -1,35 +1,37 @@
 
 .main {
-    background-color: #0c1021;
+    background-color: #0d0d14;
 }
 
 .param_knob {
-    width: 100px;
-    height: 100px;
-    color: #3f3944;
+    width: 70px;
+    height: 70px;
+    color: #001aff;
+    space: 10px;
 }
 
 .param_knob_area {
     width: 200px;
-    right: 10px;
-    left: 10px;
+    height: 70px;
+    right: 0;
+    left: 0;
 }
 
 label {
     child-space: 1s;
     font-size: 20;
-    color: #d7ba7d;
+    color: #d7ceba;
     right: 0px;
 }
 
 .param_name_label {
     space: 1s;
-    bottom: 0px;
+    bottom: 2px;
 }
 
 .unit_label {
-    space: 1s;
-    top: 0px;
+    space: 1s; 
+    top: 2px;
 }
 
 .right {
@@ -40,8 +42,10 @@ label {
     right: 0;
 }
 
-
 .tick {
-    background-color: #716879;
+    background-color: #f3fa92;
 }
 
+.track {
+    background-color: #f3fa92;
+}

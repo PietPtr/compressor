@@ -2,13 +2,16 @@ use nih_plug::prelude::Editor;
 use nih_plug_vizia::vizia::prelude::*;
 use nih_plug_vizia::{assets, widgets::*};
 use nih_plug_vizia::{create_vizia_editor, ViziaState, ViziaTheming};
+
 mod knob;
+mod sineview;
 
 use std::sync::Arc;
 
 use crate::CompressorParams;
 
 use self::knob::{ParamKnob, ParamKnobConfiguration, LabelAlignment};
+use self::sineview::SineView;
 
 #[cfg(not(feature = "external_stylesheet"))]
 const STYLE: &str = include_str!("editor/stylesheet.css");
@@ -54,7 +57,7 @@ pub(crate) fn create(
                 ParamKnob::new(cx, Data::params, |p| &p.steepness,
                     ParamKnobConfiguration { label_align: LabelAlignment::Left });
             }).height(Pixels(300.0));
-            // TODO: sine monitor
+            SineView::new(cx);
             VStack::new(cx, |cx| {
                 ParamKnob::new(cx, Data::params, |p| &p.attack,
                     ParamKnobConfiguration { label_align: LabelAlignment::Right });

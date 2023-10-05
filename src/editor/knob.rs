@@ -9,6 +9,24 @@ pub enum ParamEvent {
     EndSetParam,
 }
 
+pub enum LabelAlignment {
+    Left, 
+    Right,
+}
+
+impl ToString for LabelAlignment {
+    fn to_string(&self) -> String {
+        match self {
+            LabelAlignment::Left => String::from("left"),
+            LabelAlignment::Right => String::from("right"),
+        }
+    }
+}
+
+pub struct ParamKnobConfiguration {
+    pub label_align: LabelAlignment,
+}
+
 #[derive(Lens)]
 pub struct ParamKnob {
     param_base: ParamWidgetBase
@@ -19,6 +37,7 @@ impl ParamKnob {
         cx: &mut Context,
         params: L,
         params_to_param: FMap,
+        config: ParamKnobConfiguration,
     ) -> Handle<Self>
     where
         L: Lens<Target = Params> + Clone + Copy,
@@ -31,23 +50,17 @@ impl ParamKnob {
         }.build(
             cx, 
             ParamWidgetBase::build_view(params, params_to_param, move |cx, param_data| {
-                VStack::new(cx, |cx| {
-                    Knob::custom(cx, 
-                        param_data.param().default_normalized_value(),
-                        params.map(move |params| {
-                            params_to_param(params).unmodulated_normalized_value()
-                        }),
-                        move |cx, lens| {
-                            TickKnob::new(
+                let align_class = config.label_align.to_string();
+
+                HStack::new(cx, |cx| {
+                    let labels = |cx| {
+                        VStack::new(cx, |cx| {
+                            Label::new(
                                 cx,
-                                Percentage(80.),
-                                Pixels(4.),
-                                Pixels(20.),
-                                300.0,
-                                KnobMode::Continuous,
+                                params.map(move |params| params_to_param(params).name().to_owned()),
                             )
-                            .value(lens.clone())
-                            .class("tick");
+                            .class("param_name_label")
+                            .class(align_class.as_str());
                             Label::new(
                                 cx, 
                                 params.map(move |params| {
@@ -62,26 +75,53 @@ impl ParamKnob {
                                 })
                             )
                             .class("unit_label")
-                        },
-                    )
-                    .on_mouse_down(move |cx, _button| {
-                        cx.emit(ParamEvent::BeginSetParam);
-                    })
-                    .on_changing(move |cx, val| {
-                        cx.emit(ParamEvent::SetParam(val));
-                    })
-                    .on_mouse_up(move |cx, _button| {
-                        cx.emit(ParamEvent::EndSetParam);
-                    });
+                            .class(align_class.as_str());
+                        });
+                    };
+    
+                    let knob = |cx| {
+                        Knob::custom(cx, 
+                            param_data.param().default_normalized_value(),
+                            params.map(move |params| {
+                                params_to_param(params).unmodulated_normalized_value()
+                            }),
+                            move |cx, lens| {
+                                TickKnob::new(
+                                    cx,
+                                    Percentage(80.),
+                                    Pixels(4.),
+                                    Pixels(20.),
+                                    300.0,
+                                    KnobMode::Continuous,
+                                )
+                                .value(lens.clone())
+                                .class("tick")
+                            },
+                        )
+                        .on_mouse_down(move |cx, _button| {
+                            cx.emit(ParamEvent::BeginSetParam);
+                        })
+                        .on_changing(move |cx, val| {
+                            cx.emit(ParamEvent::SetParam(val));
+                        })
+                        .on_mouse_up(move |cx, _button| {
+                            cx.emit(ParamEvent::EndSetParam);
+                        })
+                        .class("param_knob");
+                    };
 
-                    Label::new(
-                        cx,
-                        params.map(move |params| params_to_param(params).name().to_owned()),
-                    )
-                    .space(Stretch(1.0))
-                    .top(Stretch(0.));
+                    match config.label_align {
+                        LabelAlignment::Left => {
+                            labels(cx);
+                            knob(cx);
+                        }
+                        LabelAlignment::Right => {
+                            knob(cx);
+                            labels(cx);
+                        }
+                    };
                 })
-                .class("param_knob");
+                .class("param_knob_area");
             }))
     }
 }
@@ -94,7 +134,6 @@ impl View for ParamKnob {
                     self.param_base.begin_set_parameter(cx);
                 }
                 ParamEvent::SetParam(val) => {
-                    println!("value change {val}");
                     self.param_base.set_normalized_value(cx, *val);
                 }
                 ParamEvent::EndSetParam => {

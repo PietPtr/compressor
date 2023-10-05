@@ -7,7 +7,10 @@ build:
 debug:
 	cargo xtask bundle compressor --release --features "detailed_debugging"
 
-gui: build
+debug_gui:
+	cargo xtask bundle compressor --release --features "external_stylesheet"
+
+gui: debug_gui
 	./target/bundled/Compressor
 
 slap: build
@@ -16,7 +19,6 @@ slap: build
 	--output=out.wav \
 	--param=Threshold:-25 \
 	--overwrite
-
 	
 funk: build
 	plugalyzer process --plugin /home/pieter/.vst3/Compressor.vst3 \

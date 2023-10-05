@@ -6,21 +6,40 @@
 .param_knob {
     width: 100px;
     height: 100px;
-    border-radius: 3px;
-    border-color: #5b5461;
     color: #3f3944;
+}
+
+.param_knob_area {
+    width: 200px;
+    right: 10px;
+    left: 10px;
 }
 
 label {
     child-space: 1s;
     font-size: 20;
     color: #d7ba7d;
+    right: 0px;
+}
+
+.param_name_label {
+    space: 1s;
+    bottom: 0px;
 }
 
 .unit_label {
-    font-size: 13;
-    color: #d7ba7d;    
+    space: 1s;
+    top: 0px;
 }
+
+.right {
+    left: 0;
+}
+
+.left {
+    right: 0;
+}
+
 
 .tick {
     background-color: #716879;

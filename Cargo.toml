@@ -24,6 +24,7 @@ rand = "0.8.5"
 
 [features]
 detailed_debugging = []
+external_stylesheet = []
 
 [profile.release]
 lto = "thin"

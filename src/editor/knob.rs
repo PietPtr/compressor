@@ -32,14 +32,56 @@ impl ParamKnob {
             cx, 
             ParamWidgetBase::build_view(params, params_to_param, move |cx, param_data| {
                 VStack::new(cx, |cx| {
-                    Knob::new(cx, 0.5, 
+                    Knob::custom(cx, 
+                        param_data.param().default_normalized_value(),
                         params.map(move |params| {
                             params_to_param(params).unmodulated_normalized_value()
-                        }), 
-                        true);
+                        }),
+                        move |cx, lens| {
+                            TickKnob::new(
+                                cx,
+                                Percentage(80.),
+                                Pixels(4.),
+                                Pixels(20.),
+                                300.0,
+                                KnobMode::Continuous,
+                            )
+                            .value(lens.clone())
+                            .class("tick");
+                            Label::new(
+                                cx, 
+                                params.map(move |params| {
+                                    params_to_param(params)
+                                        .normalized_value_to_string(
+                                            params_to_param(params)
+                                                .modulated_normalized_value()
+                                                .to_owned(), 
+                                            true
+                                        )
+                                        .to_owned()
+                                })
+                            )
+                            .class("unit_label")
+                        },
+                    )
+                    .on_mouse_down(move |cx, _button| {
+                        cx.emit(ParamEvent::BeginSetParam);
+                    })
+                    .on_changing(move |cx, val| {
+                        cx.emit(ParamEvent::SetParam(val));
+                    })
+                    .on_mouse_up(move |cx, _button| {
+                        cx.emit(ParamEvent::EndSetParam);
+                    });
 
-                    
-                });
+                    Label::new(
+                        cx,
+                        params.map(move |params| params_to_param(params).name().to_owned()),
+                    )
+                    .space(Stretch(1.0))
+                    .top(Stretch(0.));
+                })
+                .class("param_knob");
             }))
     }
 }
@@ -52,6 +94,7 @@ impl View for ParamKnob {
                     self.param_base.begin_set_parameter(cx);
                 }
                 ParamEvent::SetParam(val) => {
+                    println!("value change {val}");
                     self.param_base.set_normalized_value(cx, *val);
                 }
                 ParamEvent::EndSetParam => {

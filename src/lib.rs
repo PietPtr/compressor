@@ -136,7 +136,7 @@ impl Default for CompressorParams {
             )
             .with_smoother(SmoothingStyle::Logarithmic(50.0))
             .with_unit(" dB")
-            .with_value_to_string(formatters::v2s_f32_gain_to_db(2))
+            .with_value_to_string(formatters::v2s_f32_gain_to_db(1))
             .with_string_to_value(formatters::s2v_f32_gain_to_db()),
 
             ratio: FloatParam::new(
@@ -145,31 +145,34 @@ impl Default for CompressorParams {
                 FloatRange::Skewed {
                     min: 1.0,
                     max: 200.0,
-                    factor: FloatRange::gain_skew_factor(1.0, 200.0),
+                    factor: FloatRange::gain_skew_factor(1.0, 40.0),
                 },
             )
-            .with_smoother(SmoothingStyle::Logarithmic(50.0)),
+            .with_smoother(SmoothingStyle::Logarithmic(50.0))
+            .with_value_to_string(formatters::v2s_compression_ratio(2)),
 
             attack: FloatParam::new(
                 "Attack",
                 10.0,
                 FloatRange::Linear {
-                    min: 1.0,
-                    max: 100.0,
+                    min: 0.0,
+                    max: 200.0,
                 },
             )
             .with_smoother(SmoothingStyle::Linear(1.0))
+            .with_value_to_string(formatters::v2s_f32_rounded(0))
             .with_unit(" ms"),
 
             release: FloatParam::new(
                 "Release",
                 10.0,
                 FloatRange::Linear {
-                    min: 1.0,
-                    max: 100.0,
+                    min: 0.0,
+                    max: 200.0,
                 },
             )
             .with_smoother(SmoothingStyle::Linear(1.0))
+            .with_value_to_string(formatters::v2s_f32_rounded(0))
             .with_unit(" ms"),
 
             steepness: FloatParam::new(
@@ -177,7 +180,8 @@ impl Default for CompressorParams {
                 30.0,
                 FloatRange::Linear { min: 5.0, max: 100.0 },
             )
-            .with_smoother(SmoothingStyle::Linear(1.0)),
+            .with_smoother(SmoothingStyle::Linear(1.0))
+            .with_value_to_string(formatters::v2s_f32_rounded(1)),
 
             #[cfg(feature = "detailed_debugging")]
             logger_length: FloatParam::new(

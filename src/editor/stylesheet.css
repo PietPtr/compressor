@@ -1,0 +1,28 @@
+
+.main {
+    background-color: #0c1021;
+}
+
+.param_knob {
+    width: 100px;
+    height: 100px;
+    border-radius: 3px;
+    border-color: #5b5461;
+    color: #3f3944;
+}
+
+label {
+    child-space: 1s;
+    font-size: 20;
+    color: #d7ba7d;
+}
+
+.unit_label {
+    font-size: 13;
+    color: #d7ba7d;    
+}
+
+.tick {
+    background-color: #716879;
+}
+

@@ -1,4 +1,5 @@
-# Plugin
+# Compressor
+Custom compressor to learn VST3 plugin development.
 
 # Plugalyzer
 Requires [Plugalyzer](https://github.com/CrushedPixel/Plugalyzer) for certain make targets used for low level debugging (e.g. `triangle`)

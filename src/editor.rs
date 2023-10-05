@@ -11,7 +11,7 @@ use crate::CompressorParams;
 use self::knob::ParamKnob;
 
 // TODO: should be loaded from a file (using include_str!() macro?)
-const STYLE: &str = r#""#;
+const STYLE: &str = include_str!("editor/stylesheet.css");
 
 #[derive(Lens)]
 struct Data {
@@ -21,7 +21,7 @@ struct Data {
 impl Model for Data {}
 
 pub(crate) fn default_state() -> Arc<ViziaState> {
-    ViziaState::new(|| (720, 440))
+    ViziaState::new(|| (720, 720))
 }
 
 pub(crate) fn create(
@@ -41,12 +41,17 @@ pub(crate) fn create(
         ResizeHandle::new(cx);
 
         HStack::new(cx, |cx| {
-            ParamKnob::new(cx, Data::params, |p| &p.threshold);
-            ParamKnob::new(cx, Data::params, |p| &p.ratio);
-            ParamKnob::new(cx, Data::params, |p| &p.attack);
-            ParamKnob::new(cx, Data::params, |p| &p.release);
-            ParamKnob::new(cx, Data::params, |p| &p.steepness);
-        })
-        .child_space(Stretch(1.0));
+            VStack::new(cx, |cx| {
+                ParamKnob::new(cx, Data::params, |p| &p.threshold);
+                ParamKnob::new(cx, Data::params, |p| &p.ratio);
+                ParamKnob::new(cx, Data::params, |p| &p.steepness);
+            });
+            // TODO: sine monitor
+            VStack::new(cx, |cx| {
+                ParamKnob::new(cx, Data::params, |p| &p.attack);
+                ParamKnob::new(cx, Data::params, |p| &p.release);
+            });
+        }).class("main");
+
     })
 }

@@ -149,7 +149,8 @@ impl Default for CompressorParams {
                 },
             )
             .with_smoother(SmoothingStyle::Logarithmic(50.0))
-            .with_value_to_string(formatters::v2s_compression_ratio(2)),
+            .with_value_to_string(formatters::v2s_compression_ratio(2))
+            .with_string_to_value(formatters::s2v_compression_ratio()),
 
             attack: FloatParam::new(
                 "Attack",

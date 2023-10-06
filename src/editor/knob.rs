@@ -2,7 +2,7 @@ use nih_plug::prelude::Param;
 use nih_plug_vizia::vizia::prelude::*;
 use nih_plug_vizia::widgets::param_base::ParamWidgetBase;
 
-use super::sineview::{ParamUpdateEvent, SineView};
+use super::sineview::ParamUpdateEvent;
 
 #[derive(Debug)]
 pub enum ParamEvent {
@@ -118,7 +118,7 @@ impl ParamKnob {
                         })
                         .on_changing(move |cx, val| {
                             cx.emit(ParamEvent::SetParam(val));
-                            
+
                             if let Some(sineview) = config.listener {
                                 cx.emit_to( sineview, ParamUpdateEvent::ParamUpdate);
                             };

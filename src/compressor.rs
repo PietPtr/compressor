@@ -1,5 +1,3 @@
-use nih_plug::buffer::ChannelSamples;
-
 use crate::csv_debugging::SampleLogger;
 
 pub struct Algo {

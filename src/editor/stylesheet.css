@@ -51,8 +51,9 @@ label {
 }
 
 sineview {
+    background-color: #f3fa92;
     width: 300px;
-    space: 5px;
+    space: 0px;
     left: 15px;
     right: 15px;
 }

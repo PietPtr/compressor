@@ -49,3 +49,10 @@ label {
 .track {
     background-color: #f3fa92;
 }
+
+sineview {
+    width: 300px;
+    space: 5px;
+    left: 15px;
+    right: 15px;
+}

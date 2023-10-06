@@ -16,11 +16,9 @@ crate-type = ["cdylib", "lib"]
 # thread in debug builds.
 nih_plug = { git = "https://github.com/robbert-vdh/nih-plug.git", features = ["assert_process_allocs", "standalone"] }
 nih_plug_vizia = { git = "https://github.com/robbert-vdh/nih-plug.git" }
-# Uncomment the below line to disable the on-by-default VST3 feature to remove
-# the GPL compatibility requirement
-# nih_plug = { git = "https://github.com/robbert-vdh/nih-plug.git", default_features = false, features = ["assert_process_allocs"] }
 csv = "1.1"
 rand = "0.8.5"
+femtovg = { git = "https://github.com/rhelmot/femtovg", branch = "cosmic", default-features = false, features = ["image-loading"] }
 
 [features]
 detailed_debugging = []

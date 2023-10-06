@@ -48,27 +48,30 @@ pub(crate) fn create(
 
         ResizeHandle::new(cx);
 
+        let knob_config = ParamKnobConfiguration { label_align: LabelAlignment::Right, listener: None };
+
         HStack::new(cx, |cx| {
             VStack::new(cx, |cx| {
-                ParamKnob::new(cx, Data::params, |p| &p.threshold,
-                    ParamKnobConfiguration { label_align: LabelAlignment::Left });
-                ParamKnob::new(cx, Data::params, |p| &p.ratio,
-                    ParamKnobConfiguration { label_align: LabelAlignment::Left });
-                ParamKnob::new(cx, Data::params, |p| &p.steepness,
-                    ParamKnobConfiguration { label_align: LabelAlignment::Left });
-            }).height(Pixels(300.0));
-            SineView::new(
+                ParamKnob::new(cx, Data::params, |p| &p.attack,
+                    ParamKnobConfiguration { label_align: LabelAlignment::Left, ..knob_config });
+                ParamKnob::new(cx, Data::params, |p| &p.release,
+                    ParamKnobConfiguration { label_align: LabelAlignment::Left, ..knob_config });
+            }).height(Pixels(200.0));
+
+            let sineview = SineView::new(
                 cx,
                 Arc::clone(&params),
-            );
+            ).entity;
+
             VStack::new(cx, |cx| {
-                ParamKnob::new(cx, Data::params, |p| &p.attack,
-                    ParamKnobConfiguration { label_align: LabelAlignment::Right });
-                ParamKnob::new(cx, Data::params, |p| &p.release,
-                    ParamKnobConfiguration { label_align: LabelAlignment::Right });
-            }).height(Pixels(200.0));
+                ParamKnob::new(cx, Data::params, |p| &p.threshold,
+                    ParamKnobConfiguration { listener: Some(sineview), ..knob_config });
+                ParamKnob::new(cx, Data::params, |p| &p.ratio,
+                    ParamKnobConfiguration { listener: Some(sineview), ..knob_config });
+                ParamKnob::new(cx, Data::params, |p| &p.steepness,
+                    ParamKnobConfiguration { listener: Some(sineview), ..knob_config });
+            }).height(Pixels(300.0));
         })
-        .top(Pixels(0.))
         .class("main");
     })
 }

@@ -1,18 +1,16 @@
 extern crate csv;
 
-use csv_debugging::SampleLogger;
 use nih_plug::prelude::*;
 use nih_plug_vizia::ViziaState;
 use std::sync::Arc;
 
 pub mod csv_debugging;
 mod editor;
+mod compressor;
 
 pub struct Compressor {
     params: Arc<CompressorParams>,
-    sample_rate: f32,
-    envelope: f32,
-    logger: SampleLogger,
+    algo: compressor::Algo,
 }
 
 #[derive(Params, Debug)]
@@ -44,7 +42,7 @@ impl Compressor {
         _context: &mut impl ProcessContext<Self>,
     ) -> Result<(), &'static str> {
         #[cfg(feature = "detailed_debugging")]
-        self.logger.set_quit_after_n_samples(self.params.logger_length.value());
+        self.algo.logger.set_quit_after_n_samples(self.params.logger_length.value());
 
         for channel_samples in buffer.iter_samples() {
             // TODO: can be seen from audio layout right?
@@ -56,53 +54,13 @@ impl Compressor {
 
             // TODO: make smoothed.next() instead of value
             let threshold = self.params.threshold.smoothed.next();
-            let ratio_denom = self.params.ratio.smoothed.next();
+            let ratio = self.params.ratio.smoothed.next();
             let attack = self.params.attack.smoothed.next() / 1000.0;
             let release = self.params.release.smoothed.next() / 1000.0;
             let steepness = self.params.steepness.smoothed.next();
 
-            let attack_slope = 1.0 / (self.sample_rate * attack);
-            let release_slope = 1.0 / (self.sample_rate * release);
-
-            let envelope_scaler = 1.0 / (1.0 - threshold);
-
-            for sample in channel_samples {
-                self.logger.write("sample", *sample)?;
-                self.logger.write("sample.abs()", (*sample).abs())?;
-                self.logger.write("envelope", self.envelope)?;
-                self.logger.write("threshold", threshold)?;
-                self.logger.write("-threshold", -threshold)?;
-
-                let abs_sample = (*sample).abs();
-
-                self.envelope = if abs_sample > self.envelope {
-                    (self.envelope + attack_slope).min(abs_sample)
-                } else if abs_sample < self.envelope {
-                    (self.envelope - release_slope).max(abs_sample)
-                } else {
-                    self.envelope
-                };
-                
-                let ratio = 1.0 / (((self.envelope - threshold) * envelope_scaler) * (ratio_denom - 1.0) + 1.0);
-
-                let wet = if self.envelope > threshold && *sample > threshold {
-                    threshold + (*sample - threshold) * ratio
-                } else if -self.envelope < -threshold && *sample < -threshold {
-                    -(threshold + (abs_sample - threshold) * ratio)
-                } else {
-                    *sample
-                };
-
-                let sigmoid = |x: f32| 1.0 / (1.0 + (steepness * x).exp());
-
-                let distance_from_threshold = threshold - abs_sample;
-
-                let mix = sigmoid(distance_from_threshold);
-                *sample = *sample * (1.0 - mix) + wet * mix;
-
-                self.logger.write("mix", mix)?;
-                self.logger.write("after", *sample)?;
-            }
+            self.algo.process_samples(channel_samples.into_iter().next().expect("Expect at least one channel"), 
+                compressor::RawParameters { threshold, ratio, steepness, attack, release })?;
         }
 
         Ok(())
@@ -113,9 +71,7 @@ impl Default for Compressor {
     fn default() -> Self {
         Self {
             params: Arc::new(CompressorParams::default()),
-            sample_rate: 48000.0,
-            envelope: 0.0,
-            logger: SampleLogger::new(),
+            algo: compressor::Algo::new(),
         }
     }
 }
@@ -240,7 +196,7 @@ impl Plugin for Compressor {
             Ok(_) => return ProcessStatus::Normal,
             Err(err) => {
                 // Also ugly
-                self.logger.write_debug_values().expect("Error writing CSV file");
+                self.algo.logger.write_debug_values().expect("Error writing CSV file");
                 // Ugly, but easiest way to stop plugin right now...
                 panic!("Processing aborted with: {}", err);
                 // match self.logger.write_debug_values() {

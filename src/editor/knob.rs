@@ -2,6 +2,8 @@ use nih_plug::prelude::Param;
 use nih_plug_vizia::vizia::prelude::*;
 use nih_plug_vizia::widgets::param_base::ParamWidgetBase;
 
+use super::sineview::{ParamUpdateEvent, SineView};
+
 #[derive(Debug)]
 pub enum ParamEvent {
     BeginSetParam,
@@ -9,6 +11,7 @@ pub enum ParamEvent {
     EndSetParam,
 }
 
+#[derive(Copy, Clone)]
 pub enum LabelAlignment {
     Left, 
     Right,
@@ -25,6 +28,7 @@ impl ToString for LabelAlignment {
 
 pub struct ParamKnobConfiguration {
     pub label_align: LabelAlignment,
+    pub listener: Option<Entity>,
 }
 
 #[derive(Lens)]
@@ -114,6 +118,10 @@ impl ParamKnob {
                         })
                         .on_changing(move |cx, val| {
                             cx.emit(ParamEvent::SetParam(val));
+                            
+                            if let Some(sineview) = config.listener {
+                                cx.emit_to( sineview, ParamUpdateEvent::ParamUpdate);
+                            };
                         })
                         .on_mouse_up(move |cx, _button| {
                             cx.emit(ParamEvent::EndSetParam);

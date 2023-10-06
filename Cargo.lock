@@ -504,6 +504,7 @@ name = "compressor"
 version = "0.1.0"
 dependencies = [
  "csv",
+ "femtovg 0.4.0 (git+https://github.com/rhelmot/femtovg?branch=cosmic)",
  "nih_plug",
  "nih_plug_vizia",
  "rand 0.8.5",
@@ -896,10 +897,31 @@ dependencies = [
  "bitflags 1.3.2",
  "fnv",
  "generational-arena",
- "glow",
+ "glow 0.12.3",
  "image",
  "imgref",
- "lru",
+ "lru 0.9.0",
+ "ouroboros",
+ "rgb",
+ "rustybuzz",
+ "unicode-bidi",
+ "unicode-segmentation",
+ "wasm-bindgen",
+ "web-sys",
+]
+
+[[package]]
+name = "femtovg"
+version = "0.4.0"
+source = "git+https://github.com/rhelmot/femtovg?branch=cosmic#09f4837fff4d2cd58ddc4674d0d7e1296a4123aa"
+dependencies = [
+ "bitflags 1.3.2",
+ "fnv",
+ "generational-arena",
+ "glow 0.11.2",
+ "image",
+ "imgref",
+ "lru 0.7.8",
  "ouroboros",
  "rgb",
  "rustybuzz",
@@ -1048,6 +1070,18 @@ name = "glob"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d2fabcfbdc87f4758337ca535fb41a6d701b65693ce38287d856d1674551ec9b"
+
+[[package]]
+name = "glow"
+version = "0.11.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d8bd5877156a19b8ac83a29b2306fe20537429d318f3ff0a1a2119f8d9c61919"
+dependencies = [
+ "js-sys",
+ "slotmap",
+ "wasm-bindgen",
+ "web-sys",
+]
 
 [[package]]
 name = "glow"
@@ -1385,6 +1419,12 @@ name = "log"
 version = "0.4.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b5e6163cb8c49088c2c36f57875e58ccd8c87c7427f7fbd50ea6710b2f3f2e8f"
+
+[[package]]
+name = "lru"
+version = "0.7.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e999beba7b6e8345721bd280141ed958096a2e4abdf74f67ff4ce49b4b54e47a"
 
 [[package]]
 name = "lru"
@@ -2709,7 +2749,7 @@ version = "0.1.0"
 source = "git+https://github.com/robbert-vdh/vizia.git?branch=patched#39e295ae30e542a0b8a82546e0003568da5b74d6"
 dependencies = [
  "baseview 0.1.0 (git+https://github.com/RustAudio/baseview.git?rev=7001c2521fa1a439a01967cb881b411cd75d9ee0)",
- "femtovg",
+ "femtovg 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "lazy_static",
  "raw-window-handle 0.4.3",
  "vizia_core",
@@ -2726,7 +2766,7 @@ dependencies = [
  "copypasta",
  "cosmic-text",
  "cssparser",
- "femtovg",
+ "femtovg 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "fluent-bundle",
  "fluent-langneg",
  "fluent-syntax",
@@ -2799,7 +2839,7 @@ source = "git+https://github.com/robbert-vdh/vizia.git?branch=patched#39e295ae30
 dependencies = [
  "console_error_panic_hook",
  "copypasta",
- "femtovg",
+ "femtovg 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "glutin",
  "glutin-winit",
  "raw-window-handle 0.5.2",

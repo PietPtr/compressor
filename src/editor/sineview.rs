@@ -1,20 +1,26 @@
 // Implements an oscilloscope like window showing what current parameters would do to a sine wave
 
-use nih_plug_vizia::vizia::prelude::*;
+use std::sync::Arc;
+
+use nih_plug::prelude::*;
+use nih_plug_vizia::{vizia::prelude::*, widgets::param_base::ParamWidgetBase};
+
+use crate::CompressorParams;
 
 pub struct SineView {
-
+    params: Arc<CompressorParams>,
 }
+
 
 impl SineView {
     pub fn new(
-        cx: &mut Context
+        cx: &mut Context,
+        parameters: Arc<CompressorParams>
     ) -> Handle<Self> {
         Self {
+            params: parameters,
+        }.build(cx, |cx| {
 
-        }
-        .build(cx, |cx| {
-            Label::new(cx, "custom view");
         })
     }
 }
@@ -25,24 +31,7 @@ impl View for SineView {
     }
 
     fn draw(&self, cx: &mut DrawContext, canvas: &mut Canvas) {
-        
+        dbg!(&self.params.threshold);
     }
 
-}
-
-impl Handle<'_, TickKnob> {
-    pub fn value<L: Lens<Target = f32>>(self, lens: L) -> Self {
-        let entity = self.entity;
-        Binding::new(self.cx, lens, move |cx, value| {
-            let value = value.get(cx);
-            if let Some(view) = cx.views.get_mut(&entity) {
-                if let Some(knob) = view.downcast_mut::<TickKnob>() {
-                    knob.normalized_value = value;
-                    cx.style.needs_redraw = true;
-                }
-            }
-        });
-
-        self
-    }
 }

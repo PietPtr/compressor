@@ -15,8 +15,8 @@ pub struct Compressor {
     logger: SampleLogger,
 }
 
-#[derive(Params)]
-struct CompressorParams {
+#[derive(Params, Debug)]
+pub struct CompressorParams {
     #[persist = "editor-state"]
     editor_state: Arc<ViziaState>,
 

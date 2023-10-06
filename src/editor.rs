@@ -57,7 +57,10 @@ pub(crate) fn create(
                 ParamKnob::new(cx, Data::params, |p| &p.steepness,
                     ParamKnobConfiguration { label_align: LabelAlignment::Left });
             }).height(Pixels(300.0));
-            SineView::new(cx);
+            SineView::new(
+                cx,
+                Arc::clone(&params),
+            );
             VStack::new(cx, |cx| {
                 ParamKnob::new(cx, Data::params, |p| &p.attack,
                     ParamKnobConfiguration { label_align: LabelAlignment::Right });

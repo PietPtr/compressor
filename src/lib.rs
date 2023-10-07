@@ -135,7 +135,11 @@ impl Default for CompressorParams {
             steepness: FloatParam::new(
                 "Steepness",
                 30.0,
-                FloatRange::Linear { min: 5.0, max: 100.0 },
+                FloatRange::Skewed {
+                    min: 1.0,
+                    max: 300.0,
+                    factor: FloatRange::gain_skew_factor(1.0, 40.0),
+                },
             )
             .with_smoother(SmoothingStyle::Linear(1.0))
             .with_value_to_string(formatters::v2s_f32_rounded(0)),

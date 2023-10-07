@@ -26,14 +26,15 @@ impl ToString for LabelAlignment {
     }
 }
 
+#[derive(Clone)]
 pub struct ParamKnobConfiguration {
     pub label_align: LabelAlignment,
-    pub listener: Option<Entity>,
+    pub listeners: Vec<Entity>,
 }
 
 #[derive(Lens)]
 pub struct ParamKnob {
-    param_base: ParamWidgetBase
+    param_base: ParamWidgetBase,
 }
 
 impl ParamKnob {
@@ -119,9 +120,9 @@ impl ParamKnob {
                         .on_changing(move |cx, val| {
                             cx.emit(ParamEvent::SetParam(val));
 
-                            if let Some(sineview) = config.listener {
-                                cx.emit_to( sineview, ParamUpdateEvent::ParamUpdate);
-                            };
+                            for &listener in config.listeners.iter() {
+                                cx.emit_to(listener, ParamUpdateEvent::ParamUpdate);
+                            }
                         })
                         .on_mouse_up(move |cx, _button| {
                             cx.emit(ParamEvent::EndSetParam);

@@ -1,5 +1,5 @@
 // Implements an oscilloscope like window showing what current parameters would do to a sine wave
-use std::{f32::consts::PI, sync::Arc};
+use std::sync::Arc;
 
 use nih_plug_vizia::vizia::{
     prelude::*,
@@ -16,6 +16,7 @@ pub struct SineView {
     algo: compressor::Algo,
     width: u32,
     samples: Vec<f32>,
+    base_waveform: Box<dyn Fn(u32) -> Vec<f32>>,
 }
 
 #[derive(Debug)]
@@ -24,12 +25,13 @@ pub enum ParamUpdateEvent {
 }
 
 impl SineView {
-    pub fn new(cx: &mut Context, parameters: Arc<CompressorParams>) -> Handle<Self> {
+    pub fn new(cx: &mut Context, parameters: Arc<CompressorParams>, base_waveform: Box<dyn Fn(u32) -> Vec<f32>>) -> Handle<Self> {
         let mut view = Self {
             params: parameters,
             algo: compressor::Algo::new(),
             width: 300,
             samples: vec![0.0; 300],
+            base_waveform
         };
 
         view.recalculate();
@@ -39,13 +41,7 @@ impl SineView {
     }
 
     fn recalculate(&mut self) {
-        self.samples = Vec::new();
-
-        for i in 0..self.width {
-            // TODO: incorporate width as a setting?
-            self.samples
-                .push((i as f32 / (self.width as f32 / (2.0 * PI * 1.0))).sin());
-        }
+        self.samples = (self.base_waveform)(self.width);
 
         self.samples.iter_mut().for_each(|sample| {
             self.algo

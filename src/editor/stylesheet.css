@@ -57,3 +57,11 @@ sineview {
     left: 15px;
     right: 15px;
 }
+
+timeconstants {
+    background-color: #f3fa92;
+    width: 300px;
+    space: 0px;
+    left: 15px;
+    right: 15px;
+}

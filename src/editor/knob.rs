@@ -13,7 +13,7 @@ pub enum ParamEvent {
 
 #[derive(Copy, Clone)]
 pub enum LabelAlignment {
-    Left, 
+    Left,
     Right,
 }
 
@@ -52,8 +52,9 @@ impl ParamKnob {
     {
         Self {
             param_base: ParamWidgetBase::new(cx, params.clone(), params_to_param),
-        }.build(
-            cx, 
+        }
+        .build(
+            cx,
             ParamWidgetBase::build_view(params, params_to_param, move |cx, param_data| {
                 let align_class = config.label_align.to_string();
 
@@ -67,25 +68,26 @@ impl ParamKnob {
                             .class("param_name_label")
                             .class(align_class.as_str());
                             Label::new(
-                                cx, 
+                                cx,
                                 params.map(move |params| {
                                     params_to_param(params)
                                         .normalized_value_to_string(
                                             params_to_param(params)
                                                 .modulated_normalized_value()
-                                                .to_owned(), 
-                                            true
+                                                .to_owned(),
+                                            true,
                                         )
                                         .to_owned()
-                                })
+                                }),
                             )
                             .class("unit_label")
                             .class(align_class.as_str());
                         });
                     };
-    
+
                     let knob = |cx| {
-                        Knob::custom(cx, 
+                        Knob::custom(
+                            cx,
                             param_data.param().default_normalized_value(),
                             params.map(move |params| {
                                 params_to_param(params).unmodulated_normalized_value()
@@ -142,23 +144,22 @@ impl ParamKnob {
                     };
                 })
                 .class("param_knob_area");
-            }))
+            }),
+        )
     }
 }
 
 impl View for ParamKnob {
     fn event(&mut self, cx: &mut EventContext, event: &mut Event) {
-        event.map(|param_change_event, _| {
-            match param_change_event {
-                ParamEvent::BeginSetParam => {
-                    self.param_base.begin_set_parameter(cx);
-                }
-                ParamEvent::SetParam(val) => {
-                    self.param_base.set_normalized_value(cx, *val);
-                }
-                ParamEvent::EndSetParam => {
-                    self.param_base.end_set_parameter(cx);
-                }
+        event.map(|param_change_event, _| match param_change_event {
+            ParamEvent::BeginSetParam => {
+                self.param_base.begin_set_parameter(cx);
+            }
+            ParamEvent::SetParam(val) => {
+                self.param_base.set_normalized_value(cx, *val);
+            }
+            ParamEvent::EndSetParam => {
+                self.param_base.end_set_parameter(cx);
             }
         });
     }

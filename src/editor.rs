@@ -12,7 +12,7 @@ use std::sync::Arc;
 use crate::CompressorParams;
 
 use self::knob::{ParamKnob, ParamKnobConfiguration, LabelAlignment};
-use self::sineview::SineView;
+use self::sineview::{SineView, TimeConstantsView};
 
 #[cfg(not(feature = "external_stylesheet"))]
 const STYLE: &str = include_str!("editor/stylesheet.css");
@@ -25,7 +25,7 @@ struct Data {
 impl Model for Data {}
 
 pub(crate) fn default_state() -> Arc<ViziaState> {
-    ViziaState::new(|| (720, 300))
+    ViziaState::new(|| (750, 300))
 }
 
 pub(crate) fn create(
@@ -69,12 +69,18 @@ pub(crate) fn create(
                     }),
                 ).entity;
         
-                let rel_atk_view = SineView::new(
+                let rel_atk_view = TimeConstantsView::new(
                     cx,
                     Arc::clone(&params),
                     Box::new(|width| {
                         let mut samples = Vec::new();
-                        for i in 0..width {
+                        for i in 0..width/3 {
+                            samples.push((i as f32 / (width as f32 / (2.0 * PI * 16.0))).sin());
+                        }
+                        for _ in 0..width/3 {
+                            samples.push(0.0);
+                        }
+                        for i in 0..width/3 {
                             samples.push((i as f32 / (width as f32 / (2.0 * PI * 16.0))).sin());
                         }
                         samples

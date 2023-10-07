@@ -15,14 +15,14 @@ gui: debug_gui
 
 slap: build
 	plugalyzer process --plugin /home/pieter/.vst3/Compressor.vst3 \
-	--input=/home/pieter/Coding/rust/compressor/audio/slap.wav \
+	--input=/home/pieter/Coding/rust/compressor/resources/slap.wav \
 	--output=out.wav \
 	--param=Threshold:-25 \
 	--overwrite
 	
 funk: build
 	plugalyzer process --plugin /home/pieter/.vst3/Compressor.vst3 \
-	--input=/home/pieter/Coding/rust/compressor/audio/funk.wav \
+	--input=/home/pieter/Coding/rust/compressor/resources/funk.wav \
 	--output=out.wav \
 	--param=Threshold:-24 \
 	--param=Attack:100 \
@@ -33,7 +33,7 @@ funk: build
 sine: debug
 	-rm debug.csv
 	-plugalyzer process --plugin "/home/pieter/.vst3/Compressor.vst3" \
-	--input=/home/pieter/Coding/rust/compressor/audio/sine_40hz_4s.wav \
+	--input=/home/pieter/Coding/rust/compressor/resources/sine_40hz_4s.wav \
 	--output=out.wav \
 	--param=Threshold:-14 \
 	--param=Attack:100 \
@@ -47,7 +47,7 @@ sine: debug
 square: debug
 	-rm debug.csv
 	-plugalyzer process --plugin "/home/pieter/.vst3/Compressor.vst3" \
-	--input=/home/pieter/Coding/rust/compressor/audio/square_120hz_4s.wav \
+	--input=/home/pieter/Coding/rust/compressor/resources/square_120hz_4s.wav \
 	--output=out.wav \
 	--param=Threshold:-14 \
 	--param=Attack:1 \
@@ -61,7 +61,7 @@ square: debug
 triangle: debug
 	-rm debug.csv
 	-plugalyzer process --plugin "/home/pieter/.vst3/Compressor.vst3" \
-	--input=/home/pieter/Coding/rust/compressor/audio/triangle_120hz.wav \
+	--input=/home/pieter/Coding/rust/compressor/resources/triangle_120hz.wav \
 	--output=out.wav \
 	--param=Threshold:-14 \
 	--param=Attack:0 \
@@ -76,7 +76,7 @@ triangle: debug
 funkd: debug
 	-rm debug.csv
 	-plugalyzer process --plugin "/home/pieter/.vst3/Compressor.vst3" \
-	--input=/home/pieter/Coding/rust/compressor/audio/funk.wav \
+	--input=/home/pieter/Coding/rust/compressor/resources/funk.wav \
 	--output=out.wav \
 	--param=Threshold:-24 \
 	--param=Attack:100 \

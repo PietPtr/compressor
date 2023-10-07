@@ -1,8 +1,12 @@
+![Compressor](resources/gui.png)
+
 # Compressor
 Custom compressor to learn VST3 plugin development.
 
 # Plugalyzer
-Requires [Plugalyzer](https://github.com/CrushedPixel/Plugalyzer) for certain make targets used for low level debugging (e.g. `triangle`)
+Requires [Plugalyzer](https://github.com/CrushedPixel/Plugalyzer) for certain make targets used for low level debugging, e.g. `make triangle`, which plots some small amount of samples and other debug values using matplotlib:
+
+![make triangle](resources/make_triangle.png)
 
 Needs package `ladspa`:
 ```

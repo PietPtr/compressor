@@ -40,7 +40,7 @@ impl SineView {
     fn recalculate(&mut self) {
         self.samples = Vec::new();
 
-        self.algo.reset();
+        // self.algo.reset();
 
         for i in 0..self.width {
             // TODO: incorporate width as a setting?

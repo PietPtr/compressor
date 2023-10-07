@@ -1,6 +1,6 @@
 use nih_plug::prelude::Editor;
 use nih_plug_vizia::vizia::prelude::*;
-use nih_plug_vizia::{assets, widgets::*};
+use nih_plug_vizia::assets;
 use nih_plug_vizia::{create_vizia_editor, ViziaState, ViziaTheming};
 
 mod knob;
@@ -45,8 +45,6 @@ pub(crate) fn create(
         Data {
             params: params.clone(),
         }.build(cx);
-
-        ResizeHandle::new(cx);
 
         let knob_config = ParamKnobConfiguration { label_align: LabelAlignment::Right, listener: None };
 

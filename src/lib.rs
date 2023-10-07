@@ -138,7 +138,7 @@ impl Default for CompressorParams {
                 FloatRange::Linear { min: 5.0, max: 100.0 },
             )
             .with_smoother(SmoothingStyle::Linear(1.0))
-            .with_value_to_string(formatters::v2s_f32_rounded(1)),
+            .with_value_to_string(formatters::v2s_f32_rounded(0)),
 
             #[cfg(feature = "detailed_debugging")]
             logger_length: FloatParam::new(

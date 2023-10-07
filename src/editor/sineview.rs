@@ -33,14 +33,13 @@ impl SineView {
         };
 
         view.recalculate();
+        view.recalculate(); // TODO: ugliest hack in the west
 
         view.build(cx, |_| {})
     }
 
     fn recalculate(&mut self) {
         self.samples = Vec::new();
-
-        // self.algo.reset();
 
         for i in 0..self.width {
             // TODO: incorporate width as a setting?
@@ -93,9 +92,7 @@ impl View for SineView {
         // Generate grid
         // TODO: check if the path can be transformed in one go by a matrix so we don't have to add bounds to it all the time
         const AMT_GRID_DIVS: u32 = 10;
-        let grid_color = Color::rgb(50, 50, 40);
-        let mut grid_paint = Paint::color(grid_color);
-        grid_paint.set_line_width(1.0);
+        let grid_paint = Paint::color(Color::rgb(50, 50, 40));
         let mut grid_path = Path::new();
 
         for x in 0..AMT_GRID_DIVS+1 {
@@ -113,8 +110,7 @@ impl View for SineView {
 
         // Show thresholds
         let mut threshold_path = Path::new();
-        let mut threshold_paint = Paint::color(Color::rgb(163, 144, 95));
-        threshold_paint.set_line_width(1.0);// TODO: check if this isn't the default already
+        let threshold_paint = Paint::color(Color::rgb(163, 144, 95));
 
         let threshold_y = self.params.threshold.value() * bounds.h / 2.0;
         threshold_path.move_to(bounds.x, bounds.h / 2.0 + threshold_y);
@@ -135,7 +131,7 @@ impl View for SineView {
         }
 
         let mut paint = Paint::color(sine_color);
-        paint.set_line_width(1.0);
+        paint.set_line_width(2.0);
         canvas.stroke_path(&mut path, &paint);
     }
 }

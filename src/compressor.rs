@@ -24,7 +24,7 @@ impl Algo {
         }
     }
 
-    pub fn reset(&mut self) {
+    pub fn _reset(&mut self) {
         self.envelope = 0.0;
         self.sample_rate = 48000.0;
     }

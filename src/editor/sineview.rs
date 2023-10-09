@@ -112,7 +112,7 @@ impl View for SineView {
         let mut threshold_path = Path::new();
         let threshold_paint = Paint::color(Color::rgb(163, 144, 95));
 
-        let threshold_y = self.params.threshold.value() * bounds.h / 2.0;
+        let threshold_y = self.params.threshold.value() * bounds.h / 2.5;
         let base_y = bounds.y + bounds.h / 2.0;
         threshold_path.move_to(bounds.x, base_y + threshold_y);
         threshold_path.line_to(bounds.x + bounds.w, base_y + threshold_y);
@@ -136,7 +136,6 @@ impl View for SineView {
         canvas.stroke_path(&mut path, &paint);
     }
 }
-
 
 pub struct TimeConstantsView {
     params: Arc<CompressorParams>,
@@ -243,7 +242,7 @@ impl View for TimeConstantsView {
         let mut threshold_path = Path::new();
         let threshold_paint = Paint::color(Color::rgb(163, 144, 95));
 
-        let threshold_y = self.params.threshold.value() * bounds.h / 2.0;
+        let threshold_y = self.params.threshold.value() * bounds.h / 2.5; // TODO: 2.5 is gross
         let base_y = bounds.y + bounds.h / 2.0;
         threshold_path.move_to(bounds.x, base_y + threshold_y);
         threshold_path.line_to(bounds.x + bounds.w, base_y + threshold_y);
@@ -254,26 +253,47 @@ impl View for TimeConstantsView {
         canvas.stroke_path(&mut threshold_path, &threshold_paint);
 
         // Render sound waveform
-        let x_scale = self.display_width as f32 / self.amount_of_samples as f32;
-        let mut draw_vec = |vector: &Vec<f32>, paint| {
+        let bucket_size = self.amount_of_samples / self.display_width;
+        let mut draw_wave = |vector: &Vec<f32>, color: Color, scale: f32| {
             let mut path = Path::new();
-            path.move_to(bounds.x, bounds.y + bounds.h / 2.0);
+            let mut x = bounds.x;
 
-            for (x, y) in vector.iter().enumerate() {
-                let x = bounds.x + x as f32 * x_scale;
-                let y = bounds.y - *y * bounds.h / 2.5 + bounds.h / 2.0;
-                path.line_to(x, y);
+            for bucket in vector.chunks(bucket_size as usize) {
+                let extrema =
+                    bucket
+                        .iter()
+                        .fold(None, |acc: Option<(f32, f32)>, &x| match acc {
+                            Some((min, max)) => Some((min.min(x), max.max(x))),
+                            None => Some((x, x)),
+                        });
+
+                let (min, max) =
+                    extrema.expect("Expect there not be NaN's etc in a plotted graph");
+
+                let max = if min - max == 0.0 {
+                    min + 1.5 / bounds.h
+                } else {
+                    max
+                };
+
+                let y_loc = |y: f32| bounds.y - scale * y * bounds.h / 2.5 + bounds.h / 2.0;
+
+                path.move_to(x, y_loc(min));
+                path.line_to(x, y_loc(max));
+
+                x += 1.0;
             }
 
-            canvas.stroke_path(&mut path, paint);
+            let scale = |c| (255.0 * c * scale.powf(1.0 / 5.0)) as u8;
+            let mut paint =
+                Paint::color(Color::rgb(scale(color.r), scale(color.g), scale(color.b)));
+            paint.set_line_width(2.0);
+
+            canvas.stroke_path(&mut path, &paint);
         };
 
-        let mut paint = Paint::color(sine_color);
-        paint.set_line_width(2.0);
-        draw_vec(&self.samples, &paint);
-        let envelope_paint = Paint::color(Color::hex("ff8989"));
-        draw_vec(&self.envelope, &envelope_paint);
-
-        
+        draw_wave(&self.samples, sine_color, 1.0);
+        draw_wave(&self.samples, sine_color, 0.5);
+        draw_wave(&self.envelope, Color::hex("ff8989"), 1.0);
     }
 }

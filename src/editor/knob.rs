@@ -1,3 +1,6 @@
+use std::cell::RefCell;
+use std::rc::Rc;
+
 use nih_plug::prelude::Param;
 use nih_plug_vizia::vizia::prelude::*;
 use nih_plug_vizia::widgets::param_base::ParamWidgetBase;
@@ -17,6 +20,7 @@ pub enum LabelAlignment {
     Right,
 }
 
+// TODO: should this be ToString or Display?
 impl ToString for LabelAlignment {
     fn to_string(&self) -> String {
         match self {
@@ -35,6 +39,7 @@ pub struct ParamKnobConfiguration {
 #[derive(Lens)]
 pub struct ParamKnob {
     param_base: ParamWidgetBase,
+    listeners: Rc<RefCell<Vec<Entity>>>,
 }
 
 impl ParamKnob {
@@ -42,7 +47,8 @@ impl ParamKnob {
         cx: &mut Context,
         params: L,
         params_to_param: FMap,
-        config: ParamKnobConfiguration,
+        label_align: LabelAlignment,
+        listeners: Rc<RefCell<Vec<Entity>>>,
     ) -> Handle<Self>
     where
         L: Lens<Target = Params> + Clone + Copy,
@@ -52,11 +58,12 @@ impl ParamKnob {
     {
         Self {
             param_base: ParamWidgetBase::new(cx, params.clone(), params_to_param),
+            listeners,
         }
         .build(
             cx,
             ParamWidgetBase::build_view(params, params_to_param, move |cx, param_data| {
-                let align_class = config.label_align.to_string();
+                let align_class = label_align.to_string();
 
                 HStack::new(cx, |cx| {
                     let labels = |cx| {
@@ -121,18 +128,14 @@ impl ParamKnob {
                         })
                         .on_changing(move |cx, val| {
                             cx.emit(ParamEvent::SetParam(val));
-
-                            for &listener in config.listeners.iter() {
-                                cx.emit_to(listener, ParamUpdateEvent::ParamUpdate);
-                            }
                         })
                         .on_mouse_up(move |cx, _button| {
                             cx.emit(ParamEvent::EndSetParam);
                         })
-                        .class("param_knob");
+                        .class("param_knob")
                     };
 
-                    match config.label_align {
+                    match label_align {
                         LabelAlignment::Left => {
                             labels(cx);
                             knob(cx);
@@ -156,6 +159,9 @@ impl View for ParamKnob {
                 self.param_base.begin_set_parameter(cx);
             }
             ParamEvent::SetParam(val) => {
+                for &listener in self.listeners.borrow().iter() {
+                    cx.emit_to(listener, ParamUpdateEvent::ParamUpdate);
+                }
                 self.param_base.set_normalized_value(cx, *val);
             }
             ParamEvent::EndSetParam => {

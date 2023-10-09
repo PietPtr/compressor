@@ -127,7 +127,7 @@ impl View for SineView {
         path.move_to(bounds.x, bounds.y + bounds.h / 2.0);
         for (x, y) in self.samples.iter().enumerate() {
             let x = bounds.x + x as f32;
-            let y = bounds.y + *y * bounds.h / 2.0 + bounds.h / 2.0;
+            let y = bounds.y + *y * bounds.h / 2.5 + bounds.h / 2.0;
             path.line_to(x, y);
         }
 
@@ -141,8 +141,10 @@ impl View for SineView {
 pub struct TimeConstantsView {
     params: Arc<CompressorParams>,
     algo: compressor::Algo,
-    width: u32,
+    amount_of_samples: u32, // TODO: figure out whether this should be usize or u32
+    display_width: u32,
     samples: Vec<f32>,
+    envelope: Vec<f32>,
     base_waveform: Box<dyn Fn(u32) -> Vec<f32>>,
 }
 
@@ -155,8 +157,10 @@ impl TimeConstantsView {
         let mut view = Self {
             params: parameters,
             algo: compressor::Algo::new(),
-            width: 300,
-            samples: vec![0.0; 300],
+            amount_of_samples: 15000,
+            display_width: 300,
+            samples: Vec::new(),
+            envelope: Vec::new(),
             base_waveform,
         };
 
@@ -166,7 +170,10 @@ impl TimeConstantsView {
     }
 
     fn recalculate(&mut self) {
-        self.samples = (self.base_waveform)(self.width);
+        self.samples = (self.base_waveform)(self.amount_of_samples);
+        self.envelope = Vec::with_capacity(self.amount_of_samples as usize);
+
+        self.algo._reset();
 
         self.samples.iter_mut().for_each(|sample| {
             self.algo
@@ -176,11 +183,13 @@ impl TimeConstantsView {
                         threshold: self.params.threshold.value(),
                         ratio: self.params.ratio.value(),
                         steepness: self.params.steepness.value(),
-                        attack: self.params.attack.value(),
-                        release: self.params.release.value(),
+                        attack: self.params.attack.value() / 1000.0,
+                        release: self.params.release.value() / 1000.0,
                     },
                 )
                 .expect("gaat goed toooch");
+
+            self.envelope.push(self.algo.get_envelope());
         });
     }
 }
@@ -245,16 +254,26 @@ impl View for TimeConstantsView {
         canvas.stroke_path(&mut threshold_path, &threshold_paint);
 
         // Render sound waveform
-        let mut path = Path::new();
-        path.move_to(bounds.x, bounds.y + bounds.h / 2.0);
-        for (x, y) in self.samples.iter().enumerate() {
-            let x = bounds.x + x as f32;
-            let y = bounds.y + *y * bounds.h / 2.0 + bounds.h / 2.0;
-            path.line_to(x, y);
-        }
+        let x_scale = self.display_width as f32 / self.amount_of_samples as f32;
+        let mut draw_vec = |vector: &Vec<f32>, paint| {
+            let mut path = Path::new();
+            path.move_to(bounds.x, bounds.y + bounds.h / 2.0);
+
+            for (x, y) in vector.iter().enumerate() {
+                let x = bounds.x + x as f32 * x_scale;
+                let y = bounds.y - *y * bounds.h / 2.5 + bounds.h / 2.0;
+                path.line_to(x, y);
+            }
+
+            canvas.stroke_path(&mut path, paint);
+        };
 
         let mut paint = Paint::color(sine_color);
         paint.set_line_width(2.0);
-        canvas.stroke_path(&mut path, &paint);
+        draw_vec(&self.samples, &paint);
+        let envelope_paint = Paint::color(Color::hex("ff8989"));
+        draw_vec(&self.envelope, &envelope_paint);
+
+        
     }
 }

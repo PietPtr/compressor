@@ -1,17 +1,19 @@
 use nih_plug::prelude::Editor;
-use nih_plug_vizia::vizia::prelude::*;
 use nih_plug_vizia::assets;
+use nih_plug_vizia::vizia::prelude::*;
 use nih_plug_vizia::{create_vizia_editor, ViziaState, ViziaTheming};
 
 mod knob;
 mod sineview;
 
+use std::cell::RefCell;
 use std::f32::consts::PI;
+use std::rc::Rc;
 use std::sync::Arc;
 
 use crate::CompressorParams;
 
-use self::knob::{ParamKnob, ParamKnobConfiguration, LabelAlignment};
+use self::knob::{LabelAlignment, ParamKnob};
 use self::sineview::{SineView, TimeConstantsView};
 
 #[cfg(not(feature = "external_stylesheet"))]
@@ -45,65 +47,66 @@ pub(crate) fn create(
 
         Data {
             params: params.clone(),
-        }.build(cx);
+        }
+        .build(cx);
 
-        let knob_config = ParamKnobConfiguration { label_align: LabelAlignment::Right, listeners: Vec::new() };
+        let scope_listeners = Rc::new(RefCell::new(Vec::new()));
 
         HStack::new(cx, |cx| {
             VStack::new(cx, |cx| {
-                ParamKnob::new(cx, Data::params, |p| &p.attack,
-                    ParamKnobConfiguration { label_align: LabelAlignment::Left, ..knob_config.clone() });
-                ParamKnob::new(cx, Data::params, |p| &p.release,
-                    ParamKnobConfiguration { label_align: LabelAlignment::Left, ..knob_config.clone() }); // TODO: don't like the clones here (not too performance impactful but there must be a nicer way)
-            }).height(Pixels(200.0));
-
-            let mut sine_view_entity = None;
-            let mut rel_atk_entity = None;
+                ParamKnob::new(cx, Data::params, |p| &p.attack, LabelAlignment::Left, Rc::clone(&scope_listeners));
+                ParamKnob::new(cx, Data::params, |p| &p.release, LabelAlignment::Left, Rc::clone(&scope_listeners));
+            })
+            .height(Pixels(200.0));
 
             VStack::new(cx, |cx| {
                 let sine_view = SineView::new(
                     cx,
                     Arc::clone(&params),
                     Box::new(|width| {
-                        (0..width).map(|i| (i as f32 / (width as f32 / (2.0 * PI * 1.0))).sin()).collect()
+                        (0..width)
+                            .map(|i| (i as f32 / (width as f32 / (2.0 * PI * 1.0))).sin())
+                            .collect()
                     }),
-                ).entity;
-        
+                )
+                .entity;
+
                 let rel_atk_view = TimeConstantsView::new(
                     cx,
                     Arc::clone(&params),
                     Box::new(|width| {
-                        let mut samples = Vec::new();
-                        for i in 0..width/3 {
-                            samples.push((i as f32 / (width as f32 / (2.0 * PI * 16.0))).sin());
-                        }
-                        for _ in 0..width/3 {
+                        let mut samples = Vec::with_capacity(width as usize);
+                        for _ in 0..width / 8 {
                             samples.push(0.0);
                         }
-                        for i in 0..width/3 {
-                            samples.push((i as f32 / (width as f32 / (2.0 * PI * 16.0))).sin());
+                        for i in 0..width / 4 {
+                            samples.push((i as f32 / (width as f32 / (2.0 * PI * 512.0))).sin());
+                        }
+                        for _ in 0..width / 4 {
+                            samples.push(0.0);
+                        }
+                        for i in 0..(width / 8) * 3 {
+                            samples.push((i as f32 / (width as f32 / (2.0 * PI * 512.0))).sin());
                         }
                         samples
                     }),
-                ).entity;
+                )
+                .entity;
 
-                sine_view_entity = Some(sine_view);
-                rel_atk_entity = Some(rel_atk_view)
+                {
+                    let mut listeners_ref = scope_listeners.borrow_mut();
+                    listeners_ref.push(sine_view);
+                    listeners_ref.push(rel_atk_view);
+                }
             });
 
-            let scope_listeners = vec![
-                sine_view_entity.expect("Expect sine view to be constructed."),
-                rel_atk_entity.expect("Expect release/attack view to be constructed.")
-            ];
 
             VStack::new(cx, |cx| {
-                ParamKnob::new(cx, Data::params, |p| &p.threshold,
-                    ParamKnobConfiguration { listeners: scope_listeners.clone(), ..knob_config });
-                ParamKnob::new(cx, Data::params, |p| &p.ratio,
-                    ParamKnobConfiguration { listeners: scope_listeners.clone(), ..knob_config });
-                ParamKnob::new(cx, Data::params, |p| &p.steepness,
-                    ParamKnobConfiguration { listeners: scope_listeners.clone(), ..knob_config });
-            }).height(Pixels(300.0));
+                ParamKnob::new(cx, Data::params, |p| &p.threshold, LabelAlignment::Right, Rc::clone(&scope_listeners));
+                ParamKnob::new(cx, Data::params, |p| &p.ratio, LabelAlignment::Right, Rc::clone(&scope_listeners));
+                ParamKnob::new(cx, Data::params, |p| &p.steepness, LabelAlignment::Right, Rc::clone(&scope_listeners));
+            })
+            .height(Pixels(300.0));
         })
         .class("main");
     })

@@ -83,7 +83,7 @@ impl Default for CompressorParams {
             editor_state: editor::default_state(),
             threshold: FloatParam::new(
                 "Threshold",
-                util::db_to_gain(-7.0),
+                util::db_to_gain(0.0),
                 FloatRange::Skewed {
                     min: util::db_to_gain(-30.0),
                     max: util::db_to_gain(0.0),
@@ -97,7 +97,7 @@ impl Default for CompressorParams {
 
             ratio: FloatParam::new(
                 "Ratio",
-                2.0,
+                1.0,
                 FloatRange::Skewed {
                     min: 1.0,
                     max: 200.0,
@@ -110,7 +110,7 @@ impl Default for CompressorParams {
 
             attack: FloatParam::new(
                 "Attack",
-                10.0,
+                0.0,
                 FloatRange::Linear {
                     min: 0.0,
                     max: 200.0,
@@ -122,7 +122,7 @@ impl Default for CompressorParams {
 
             release: FloatParam::new(
                 "Release",
-                10.0,
+                0.0,
                 FloatRange::Linear {
                     min: 0.0,
                     max: 200.0,
@@ -134,7 +134,7 @@ impl Default for CompressorParams {
 
             steepness: FloatParam::new(
                 "Steepness",
-                30.0,
+                300.0,
                 FloatRange::Skewed {
                     min: 1.0,
                     max: 300.0,

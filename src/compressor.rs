@@ -31,7 +31,7 @@ impl Algo {
 
     pub fn process_samples(
         &mut self, 
-        sample: &mut f32, // TODO: make work for several channels
+        sample: &mut f32, // TODO: make work for several channels (at least stereo vs mono)
         p: RawParameters
     ) -> Result<(), &'static str> {
         let attack_slope = 1.0 / (self.sample_rate * p.attack);
@@ -76,5 +76,9 @@ impl Algo {
             self.logger.write("after", *sample)?;
 
         Ok(())
+    }
+
+    pub fn get_envelope(&self) -> f32 {
+        return self.envelope;
     }
 }

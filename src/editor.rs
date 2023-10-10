@@ -4,17 +4,17 @@ use nih_plug_vizia::vizia::prelude::*;
 use nih_plug_vizia::{create_vizia_editor, ViziaState, ViziaTheming};
 
 mod knob;
-mod sineview;
+mod scope;
 
 use std::cell::RefCell;
 use std::f32::consts::PI;
 use std::rc::Rc;
 use std::sync::Arc;
 
+use crate::editor::scope::{ScopeView, SineScope, TimeConstantsScope};
 use crate::CompressorParams;
 
 use self::knob::{LabelAlignment, ParamKnob};
-use self::sineview::{SineView, TimeConstantsView};
 
 #[cfg(not(feature = "external_stylesheet"))]
 const STYLE: &str = include_str!("editor/stylesheet.css");
@@ -80,36 +80,44 @@ pub(crate) fn create(
             .height(Pixels(300.0));
 
             VStack::new(cx, |cx| {
-                let sine_view = SineView::new(
+                let sine_view = ScopeView::new(
                     cx,
-                    Arc::clone(&params),
-                    Box::new(|width| {
-                        (0..width)
-                            .map(|i| (i as f32 / (width as f32 / (2.0 * PI * 1.0))).sin())
-                            .collect()
-                    }),
+                    SineScope::new(
+                        Arc::clone(&params),
+                        Box::new(|width| {
+                            (0..width)
+                                .map(|i| (i as f32 / (width as f32 / (2.0 * PI * 1.0))).sin())
+                                .collect()
+                        }),
+                        300,
+                    ),
+                    None,
                 )
                 .entity;
 
-                let rel_atk_view = TimeConstantsView::new(
+                let rel_atk_view = ScopeView::new(
                     cx,
-                    Arc::clone(&params),
-                    Box::new(|width| {
-                        let mut samples = Vec::with_capacity(width as usize);
-                        for _ in 0..width / 8 {
-                            samples.push(0.0);
-                        }
-                        for i in 0..width / 4 {
-                            samples.push((i as f32 / (width as f32 / (2.0 * PI * 512.0))).sin());
-                        }
-                        for _ in 0..width / 4 {
-                            samples.push(0.0);
-                        }
-                        for i in 0..(width / 8) * 3 {
-                            samples.push((i as f32 / (width as f32 / (2.0 * PI * 512.0))).sin());
-                        }
-                        samples
-                    }),
+                    TimeConstantsScope::new(
+                        Arc::clone(&params),
+                        Box::new(|width| {
+                            let mut samples = Vec::with_capacity(width as usize);
+                            for _ in 0..width / 8 {
+                                samples.push(0.0);
+                            }
+                            for i in 0..width / 4 {
+                                samples.push((i as f32 / (width as f32 / (2.0 * PI * 1024.0))).sin());
+                            }
+                            for _ in 0..width / 4 {
+                                samples.push(0.0);
+                            }
+                            for i in 0..(width / 8) * 3 {
+                                samples.push((i as f32 / (width as f32 / (2.0 * PI * 1024.0))).sin());
+                            }
+                            samples
+                        }),
+                        15000,
+                    ),
+                    None,
                 )
                 .entity;
 

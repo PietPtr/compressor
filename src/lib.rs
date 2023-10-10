@@ -1,5 +1,6 @@
 extern crate csv;
 
+use compressor::Algo;
 use nih_plug::prelude::*;
 use nih_plug_vizia::ViziaState;
 use std::sync::Arc;
@@ -7,11 +8,6 @@ use std::sync::Arc;
 mod compressor;
 pub mod csv_debugging;
 mod editor;
-
-pub struct Compressor {
-    params: Arc<CompressorParams>,
-    algo: compressor::Algo,
-}
 
 #[derive(Params, Debug)]
 pub struct CompressorParams {
@@ -36,6 +32,11 @@ pub struct CompressorParams {
     pub logger_length: FloatParam,
 }
 
+pub struct Compressor {
+    params: Arc<CompressorParams>,
+    algos: Vec<Algo>,
+}
+
 impl Compressor {
     fn process_buffer(
         &mut self,
@@ -44,12 +45,13 @@ impl Compressor {
         _context: &mut impl ProcessContext<Self>,
     ) -> Result<(), &'static str> {
         #[cfg(feature = "detailed_debugging")]
-        self.algo
+        self.algos
+            .get_mut(0)
+            .expect("Expect at least one algo present")
             .logger
             .set_quit_after_n_samples(self.params.logger_length.value());
 
         for channel_samples in buffer.iter_samples() {
-            // TODO: can be seen from audio layout right?
             #[cfg(feature = "detailed_debugging")]
             {
                 if channel_samples.len() > 1 {
@@ -67,20 +69,30 @@ impl Compressor {
             let steepness = self.params.steepness.smoothed.next();
             let gain = self.params.gain.smoothed.next();
 
-            self.algo.process_samples(
-                channel_samples
-                    .into_iter()
-                    .next()
-                    .expect("Expect at least one channel"),
-                compressor::RawParameters {
-                    threshold,
-                    ratio,
-                    steepness,
-                    attack,
-                    release,
-                    gain,
-                },
-            )?;
+            while self.algos.len() < channel_samples.len() {
+                self.algos.push(Algo::new());
+            }
+
+            assert!(channel_samples.len() == self.algos.len());
+
+            let mut algo_id = 0;
+            for sample in channel_samples {
+                self.algos
+                    .get_mut(algo_id)
+                    .expect(format!("Expect algo id {algo_id} to be present.").as_str())
+                    .process_samples(
+                        sample,
+                        compressor::RawParameters {
+                            threshold,
+                            ratio,
+                            steepness,
+                            attack,
+                            release,
+                            gain,
+                        },
+                    )?;
+                algo_id += 1;
+            }
         }
 
         Ok(())
@@ -91,7 +103,7 @@ impl Default for Compressor {
     fn default() -> Self {
         Self {
             params: Arc::new(CompressorParams::default()),
-            algo: compressor::Algo::new(),
+            algos: Vec::new(),
         }
     }
 }
@@ -198,11 +210,18 @@ impl Plugin for Compressor {
     const EMAIL: &'static str = "info@example.com";
     const VERSION: &'static str = env!("CARGO_PKG_VERSION");
 
-    const AUDIO_IO_LAYOUTS: &'static [AudioIOLayout] = &[AudioIOLayout {
-        main_input_channels: NonZeroU32::new(1),
-        main_output_channels: NonZeroU32::new(1),
-        ..AudioIOLayout::const_default()
-    }];
+    const AUDIO_IO_LAYOUTS: &'static [AudioIOLayout] = &[
+        AudioIOLayout {
+            main_input_channels: NonZeroU32::new(2),
+            main_output_channels: NonZeroU32::new(2),
+            ..AudioIOLayout::const_default()
+        },
+        AudioIOLayout {
+            main_input_channels: NonZeroU32::new(1),
+            main_output_channels: NonZeroU32::new(1),
+            ..AudioIOLayout::const_default()
+        },
+    ];
 
     const MIDI_INPUT: MidiConfig = MidiConfig::None;
     const SAMPLE_ACCURATE_AUTOMATION: bool = true;
@@ -236,8 +255,10 @@ impl Plugin for Compressor {
         match self.process_buffer(buffer, _aux, _context) {
             Ok(_) => return ProcessStatus::Normal,
             Err(err) => {
-                // Also ugly
-                self.algo
+                // TODO: Also ugly
+                self.algos
+                    .get_mut(0)
+                    .expect("Expect at least one algo present")
                     .logger
                     .write_debug_values()
                     .expect("Error writing CSV file");

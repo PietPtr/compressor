@@ -1,7 +1,7 @@
 ![Compressor](resources/gui.png)
 
 # Compressor
-Custom compressor to learn VST3 plugin development.
+Custom compressor to learn VST3 plugin development. Build VST3 plugin with `make build`. All other make targets are debug builds.
 
 # Plugalyzer
 Requires [Plugalyzer](https://github.com/CrushedPixel/Plugalyzer) for certain make targets used for low level debugging, e.g. `make triangle`, which plots some small amount of samples and other debug values using matplotlib:

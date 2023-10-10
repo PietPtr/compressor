@@ -110,13 +110,16 @@ impl<T: ScopeData + 'static> ScopeView<T> {
 
     fn draw_signal(&self, cx: &mut DrawContext, canvas: &mut Canvas, line: &SignalLine) {
         let bounds = cx.bounds();
-        let x_scale = bounds.w / line.samples.len() as f32;
+        let bucket_size = (line.samples.len() as f32 / bounds.w) as usize;
         let mut path = Path::new();
         path.move_to(bounds.x, bounds.y + bounds.h / 2.0);
 
-        for (x, y) in line.samples.iter().enumerate() {
-            let x = bounds.x + x as f32 * x_scale;
-            let clipped_y = y.clamp(-1.0, 1.0);
+        for (x, bucket) in line.samples.chunks(bucket_size).enumerate() {
+            let bucket_sum: f32 = bucket.iter().sum();
+            let average = bucket_sum / (bucket.len() as f32);
+            
+            let x = bounds.x + x as f32;
+            let clipped_y = average.clamp(-1.0, 1.0);
             let y = bounds.y + clipped_y * bounds.h / 2.0 + bounds.h / 2.0;
             path.line_to(x, y);
         }
@@ -371,7 +374,7 @@ impl ScopeData for TimeConstantsScope {
             ScopeLine::Signal(SignalLine {
                 samples: &self.envelope,
                 color: ENEVELOPE_COLOR,
-                width: 1.0,
+                width: 1.5,
             }),
         ]
     }

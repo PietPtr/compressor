@@ -18,10 +18,10 @@ pub struct RawParameters {
 
 impl Algo {
     pub fn new() -> Self {
-        Self { 
-            envelope: 0.0, 
-            sample_rate: 48000.0, 
-            logger: SampleLogger::new() 
+        Self {
+            envelope: 0.0,
+            sample_rate: 48000.0,
+            logger: SampleLogger::new(),
         }
     }
 
@@ -31,9 +31,9 @@ impl Algo {
     }
 
     pub fn process_samples(
-        &mut self, 
+        &mut self,
         sample: &mut f32, // TODO: make work for several channels (at least stereo vs mono)
-        p: RawParameters
+        p: RawParameters,
     ) -> Result<(), &'static str> {
         let attack_slope = 1.0 / (self.sample_rate * p.attack);
         let release_slope = 1.0 / (self.sample_rate * p.release);
@@ -55,8 +55,9 @@ impl Algo {
         } else {
             self.envelope
         };
-        
-        let ratio = 1.0 / (((self.envelope - p.threshold) * envelope_scaler) * (p.ratio - 1.0) + 1.0);
+
+        let ratio =
+            1.0 / (((self.envelope - p.threshold) * envelope_scaler) * (p.ratio - 1.0) + 1.0);
 
         let wet = if self.envelope > p.threshold && *sample > p.threshold {
             p.threshold + (*sample - p.threshold) * ratio
@@ -76,7 +77,7 @@ impl Algo {
         *sample *= p.gain;
 
         self.logger.write("mix", mix)?;
-            self.logger.write("after", *sample)?;
+        self.logger.write("after", *sample)?;
 
         Ok(())
     }

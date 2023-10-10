@@ -27,14 +27,13 @@ struct Data {
 impl Model for Data {}
 
 pub(crate) fn default_state() -> Arc<ViziaState> {
-    ViziaState::new(|| (750, 330))
+    ViziaState::new_with_default_scale_factor(|| (750, 330), 1.0)
 }
 
 pub(crate) fn create(
     params: Arc<CompressorParams>,
     editor_state: Arc<ViziaState>,
 ) -> Option<Box<dyn Editor>> {
-    dbg!(&editor_state);
     create_vizia_editor(editor_state, ViziaTheming::Builtin, move |cx, _| {
         assets::register_noto_sans_light(cx);
         assets::register_noto_sans_thin(cx);

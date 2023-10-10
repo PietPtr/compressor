@@ -128,12 +128,14 @@ impl<T: ScopeData + 'static> ScopeView<T> {
 
     fn draw_audio(&self, cx: &mut DrawContext, canvas: &mut Canvas, line: &AudioLine) {
         let bounds = cx.bounds();
-        let bucket_size = line.samples.len() as f32 / bounds.w;
+        let bucket_size = (line.samples.len() as f32 / bounds.w) as usize;
         let mut draw_wave = |vector: &Vec<f32>, scale: f32| {
             let mut path = Path::new();
             let mut x = bounds.x;
+            let chunks = vector.chunks(bucket_size);
+            let chunks_length = chunks.len();
 
-            for bucket in vector.chunks(bucket_size as usize) {
+            for bucket in chunks {
                 let extrema = bucket
                     .iter()
                     .fold(None, |acc: Option<(f32, f32)>, &x| match acc {
@@ -157,6 +159,10 @@ impl<T: ScopeData + 'static> ScopeView<T> {
                 path.line_to(x, y_loc(max));
 
                 x += 1.0;
+
+                if (x - bounds.x) as usize == chunks_length - 2 {
+                    break
+                }
             }
 
             let scale = |c| (255.0 * c * scale.powf(1.0 / 5.0)) as u8;
@@ -177,9 +183,11 @@ impl<T: ScopeData + 'static> ScopeView<T> {
     fn draw_border(&self, cx: &mut DrawContext, canvas: &mut Canvas) {
         let BoundingBox { x, y, w, h } = cx.bounds();
 
+        let width = 3.0;
+
         let mut path = Path::new();
-        path.rect(x, y, w, h);
-        let mut paint = Paint::color(Color::hex("#cccccc"));
+        path.rect(x - width / 2.0, y - width / 2.0, w + width, h + width);
+        let mut paint = Paint::color(Color::hex("#ccccdc"));
         paint.set_line_width(3.0);
         canvas.stroke_path(&mut path, &paint);
     }

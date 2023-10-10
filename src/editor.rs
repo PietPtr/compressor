@@ -16,7 +16,6 @@ use crate::CompressorParams;
 
 use self::knob::{LabelAlignment, ParamKnob};
 
-#[cfg(not(feature = "external_stylesheet"))]
 const STYLE: &str = include_str!("editor/stylesheet.css");
 
 #[derive(Lens)]
@@ -38,12 +37,10 @@ pub(crate) fn create(
         assets::register_noto_sans_light(cx);
         assets::register_noto_sans_thin(cx);
 
-        #[cfg(feature = "external_stylesheet")]
-        cx.add_stylesheet("src/editor/stylesheet.css")
-            .expect("Expect stylesheet to exist in debug mode");
-
-        #[cfg(not(feature = "external_stylesheet"))]
-        cx.add_theme(STYLE);
+        match cx.add_stylesheet("src/editor/stylesheet.css") {
+            Ok(_) => println!("Loaded stylesheet."),
+            Err(_) => cx.add_theme(STYLE),
+        }
 
         Data {
             params: params.clone(),

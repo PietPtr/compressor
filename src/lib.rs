@@ -108,7 +108,6 @@ impl Default for Compressor {
     }
 }
 
-//TODO: apply gain after compression to normalize?
 impl Default for CompressorParams {
     fn default() -> Self {
         Self {

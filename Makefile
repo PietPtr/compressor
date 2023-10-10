@@ -8,7 +8,7 @@ debug:
 	cargo xtask bundle compressor --release --features "detailed_debugging"
 
 debug_gui:
-	cargo xtask bundle compressor --release --features "external_stylesheet"
+	cargo xtask bundle compressor --release
 
 gui: debug_gui
 	./target/bundled/Compressor

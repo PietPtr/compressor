@@ -22,7 +22,6 @@ femtovg = { git = "https://github.com/rhelmot/femtovg", branch = "cosmic", defau
 
 [features]
 detailed_debugging = []
-external_stylesheet = []
 
 [profile.release]
 lto = "thin"

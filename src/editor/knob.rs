@@ -49,6 +49,7 @@ impl ParamKnob {
         params_to_param: FMap,
         label_align: LabelAlignment,
         listeners: Rc<RefCell<Vec<Entity>>>,
+        centered_track: bool,
     ) -> Handle<Self>
     where
         L: Lens<Target = Params> + Clone + Copy,
@@ -112,7 +113,7 @@ impl ParamKnob {
                                 .class("tick");
                                 ArcTrack::new(
                                     cx,
-                                    false,
+                                    centered_track,
                                     Percentage(95.0),
                                     Percentage(10.0),
                                     -150.0,

@@ -27,7 +27,7 @@ struct Data {
 impl Model for Data {}
 
 pub(crate) fn default_state() -> Arc<ViziaState> {
-    ViziaState::new(|| (750, 300))
+    ViziaState::new(|| (750, 330))
 }
 
 pub(crate) fn create(
@@ -61,6 +61,7 @@ pub(crate) fn create(
                     |p| &p.threshold,
                     LabelAlignment::Left,
                     Rc::clone(&scope_listeners),
+                    false,
                 );
                 ParamKnob::new(
                     cx,
@@ -68,6 +69,7 @@ pub(crate) fn create(
                     |p| &p.ratio,
                     LabelAlignment::Left,
                     Rc::clone(&scope_listeners),
+                    false,
                 );
                 ParamKnob::new(
                     cx,
@@ -75,9 +77,9 @@ pub(crate) fn create(
                     |p| &p.steepness,
                     LabelAlignment::Left,
                     Rc::clone(&scope_listeners),
+                    false,
                 );
-            })
-            .height(Pixels(300.0));
+            });
 
             VStack::new(cx, |cx| {
                 let sine_view = ScopeView::new(
@@ -136,6 +138,7 @@ pub(crate) fn create(
                     |p| &p.attack,
                     LabelAlignment::Right,
                     Rc::clone(&scope_listeners),
+                    false
                 );
                 ParamKnob::new(
                     cx,
@@ -143,6 +146,7 @@ pub(crate) fn create(
                     |p| &p.release,
                     LabelAlignment::Right,
                     Rc::clone(&scope_listeners),
+                    false,
                 );
                 ParamKnob::new(
                     cx,
@@ -150,9 +154,9 @@ pub(crate) fn create(
                     |p| &p.gain,
                     LabelAlignment::Right,
                     Rc::clone(&scope_listeners),
+                    true,
                 );
-            })
-            .height(Pixels(300.0));
+            });
         })
         .class("main");
     })

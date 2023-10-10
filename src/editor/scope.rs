@@ -2,6 +2,7 @@
 use std::sync::Arc;
 
 use nih_plug_vizia::vizia::{
+    cache::BoundingBox,
     prelude::*,
     vg::{Color, Paint, Path},
 };
@@ -34,6 +35,7 @@ pub struct ConstantLine {
 pub struct SignalLine<'a> {
     samples: &'a Vec<f32>,
     color: Color,
+    width: f32,
 }
 
 pub struct AudioLine<'a> {
@@ -95,7 +97,7 @@ impl<T: ScopeData + 'static> ScopeView<T> {
         let mut threshold_path = Path::new();
         let threshold_paint = Paint::color(line.color);
 
-        let threshold_y = line.constant * bounds.h / 2.5; // TODO: 2.5 is gross
+        let threshold_y = line.constant * bounds.h / 2.0;
         let base_y = bounds.y + bounds.h / 2.0;
         threshold_path.move_to(bounds.x, base_y + threshold_y);
         threshold_path.line_to(bounds.x + bounds.w, base_y + threshold_y);
@@ -115,12 +117,12 @@ impl<T: ScopeData + 'static> ScopeView<T> {
         for (x, y) in line.samples.iter().enumerate() {
             let x = bounds.x + x as f32 * x_scale;
             let clipped_y = y.clamp(-1.0, 1.0);
-            let y = bounds.y + clipped_y * bounds.h / 2.5 + bounds.h / 2.0;
+            let y = bounds.y + clipped_y * bounds.h / 2.0 + bounds.h / 2.0;
             path.line_to(x, y);
         }
 
         let mut paint = Paint::color(line.color);
-        paint.set_line_width(2.0);
+        paint.set_line_width(line.width);
         canvas.stroke_path(&mut path, &paint);
     }
 
@@ -148,7 +150,7 @@ impl<T: ScopeData + 'static> ScopeView<T> {
                 };
 
                 let y_loc = |y: f32| {
-                    bounds.y - scale * y.clamp(-1.0, 1.0) * bounds.h / 2.5 + bounds.h / 2.0
+                    bounds.y - scale * y.clamp(-1.0, 1.0) * bounds.h / 2.0 + bounds.h / 2.0
                 };
 
                 path.move_to(x, y_loc(min));
@@ -170,6 +172,16 @@ impl<T: ScopeData + 'static> ScopeView<T> {
 
         draw_wave(&line.samples, 1.0);
         draw_wave(&line.samples, 0.5);
+    }
+
+    fn draw_border(&self, cx: &mut DrawContext, canvas: &mut Canvas) {
+        let BoundingBox { x, y, w, h } = cx.bounds();
+
+        let mut path = Path::new();
+        path.rect(x, y, w, h);
+        let mut paint = Paint::color(Color::hex("#cccccc"));
+        paint.set_line_width(3.0);
+        canvas.stroke_path(&mut path, &paint);
     }
 }
 
@@ -207,6 +219,8 @@ impl<T: ScopeData + 'static> View for ScopeView<T> {
                 ScopeLine::Signal(line) => self.draw_signal(cx, canvas, line),
                 ScopeLine::Audio(line) => self.draw_audio(cx, canvas, line),
             });
+
+        self.draw_border(cx, canvas);
     }
 }
 
@@ -224,13 +238,19 @@ impl SineScope {
         base_waveform: Box<dyn Fn(usize) -> Vec<f32>>,
         width: usize,
     ) -> Self {
-        Self {
+        let mut scope = Self {
             params: parameters,
             algo: compressor::Algo::new(),
             width,
             samples: vec![0.0; width],
             base_waveform,
-        }
+        };
+
+        // Ensure the algorithm runs at least once to fully activate the attack during
+        // the initial recalculation. After that, avoid resetting it to maintain this state.
+        scope.recalculate();
+
+        scope
     }
 }
 
@@ -251,7 +271,7 @@ impl ScopeData for SineScope {
                         gain: self.params.gain.value(),
                     },
                 )
-                .expect("gaat goed toooch");
+                .expect("expect no debugging features to be enabled, so no errors either.");
         });
     }
 
@@ -268,6 +288,7 @@ impl ScopeData for SineScope {
             ScopeLine::Signal(SignalLine {
                 samples: &self.samples,
                 color: SIGNAL_COLOR,
+                width: 2.0,
             }),
         ]
     }
@@ -319,7 +340,7 @@ impl ScopeData for TimeConstantsScope {
                         gain: self.params.gain.value(),
                     },
                 )
-                .expect("expect no debugging features to be enabled, so no panics either.");
+                .expect("expect no debugging features to be enabled, so no errors either.");
 
             self.envelope.push(-self.algo.get_envelope());
         });
@@ -342,6 +363,7 @@ impl ScopeData for TimeConstantsScope {
             ScopeLine::Signal(SignalLine {
                 samples: &self.envelope,
                 color: ENEVELOPE_COLOR,
+                width: 1.0,
             }),
         ]
     }

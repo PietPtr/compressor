@@ -34,6 +34,7 @@ pub(crate) fn create(
     params: Arc<CompressorParams>,
     editor_state: Arc<ViziaState>,
 ) -> Option<Box<dyn Editor>> {
+    dbg!(&editor_state);
     create_vizia_editor(editor_state, ViziaTheming::Builtin, move |cx, _| {
         assets::register_noto_sans_light(cx);
         assets::register_noto_sans_thin(cx);

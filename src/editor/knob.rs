@@ -1,4 +1,5 @@
 use std::cell::RefCell;
+use std::fmt;
 use std::rc::Rc;
 
 use nih_plug::prelude::Param;
@@ -20,12 +21,11 @@ pub enum LabelAlignment {
     Right,
 }
 
-// TODO: should this be ToString or Display?
-impl ToString for LabelAlignment {
-    fn to_string(&self) -> String {
+impl fmt::Display for LabelAlignment {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            LabelAlignment::Left => String::from("left"),
-            LabelAlignment::Right => String::from("right"),
+            LabelAlignment::Left => write!(f, "left"),
+            LabelAlignment::Right => write!(f, "right"),
         }
     }
 }

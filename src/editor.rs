@@ -54,10 +54,29 @@ pub(crate) fn create(
 
         HStack::new(cx, |cx| {
             VStack::new(cx, |cx| {
-                ParamKnob::new(cx, Data::params, |p| &p.attack, LabelAlignment::Left, Rc::clone(&scope_listeners));
-                ParamKnob::new(cx, Data::params, |p| &p.release, LabelAlignment::Left, Rc::clone(&scope_listeners));
+                ParamKnob::new(
+                    cx,
+                    Data::params,
+                    |p| &p.threshold,
+                    LabelAlignment::Left,
+                    Rc::clone(&scope_listeners),
+                );
+                ParamKnob::new(
+                    cx,
+                    Data::params,
+                    |p| &p.ratio,
+                    LabelAlignment::Left,
+                    Rc::clone(&scope_listeners),
+                );
+                ParamKnob::new(
+                    cx,
+                    Data::params,
+                    |p| &p.steepness,
+                    LabelAlignment::Left,
+                    Rc::clone(&scope_listeners),
+                );
             })
-            .height(Pixels(200.0));
+            .height(Pixels(300.0));
 
             VStack::new(cx, |cx| {
                 let sine_view = SineView::new(
@@ -98,13 +117,31 @@ pub(crate) fn create(
                     listeners_ref.push(sine_view);
                     listeners_ref.push(rel_atk_view);
                 }
-            });
-
+            })
+            .class("scopes");
 
             VStack::new(cx, |cx| {
-                ParamKnob::new(cx, Data::params, |p| &p.threshold, LabelAlignment::Right, Rc::clone(&scope_listeners));
-                ParamKnob::new(cx, Data::params, |p| &p.ratio, LabelAlignment::Right, Rc::clone(&scope_listeners));
-                ParamKnob::new(cx, Data::params, |p| &p.steepness, LabelAlignment::Right, Rc::clone(&scope_listeners));
+                ParamKnob::new(
+                    cx,
+                    Data::params,
+                    |p| &p.attack,
+                    LabelAlignment::Right,
+                    Rc::clone(&scope_listeners),
+                );
+                ParamKnob::new(
+                    cx,
+                    Data::params,
+                    |p| &p.release,
+                    LabelAlignment::Right,
+                    Rc::clone(&scope_listeners),
+                );
+                ParamKnob::new(
+                    cx,
+                    Data::params,
+                    |p| &p.gain,
+                    LabelAlignment::Right,
+                    Rc::clone(&scope_listeners),
+                );
             })
             .height(Pixels(300.0));
         })

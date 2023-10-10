@@ -13,6 +13,7 @@ pub struct RawParameters {
     pub steepness: f32,
     pub attack: f32,
     pub release: f32,
+    pub gain: f32,
 }
 
 impl Algo {
@@ -71,6 +72,8 @@ impl Algo {
 
         let mix = sigmoid(distance_from_threshold);
         *sample = *sample * (1.0 - mix) + wet * mix;
+
+        *sample *= p.gain;
 
         self.logger.write("mix", mix)?;
             self.logger.write("after", *sample)?;

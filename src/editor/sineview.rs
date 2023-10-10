@@ -57,6 +57,7 @@ impl SineView {
                         steepness: self.params.steepness.value(),
                         attack: 0.0,
                         release: 10000.0,
+                        gain: self.params.gain.value(),
                     },
                 )
                 .expect("gaat goed toooch");
@@ -127,7 +128,8 @@ impl View for SineView {
         path.move_to(bounds.x, bounds.y + bounds.h / 2.0);
         for (x, y) in self.samples.iter().enumerate() {
             let x = bounds.x + x as f32;
-            let y = bounds.y + *y * bounds.h / 2.5 + bounds.h / 2.0;
+            let clipped_y = y.clamp(-1.0, 1.0);
+            let y = bounds.y + clipped_y * bounds.h / 2.5 + bounds.h / 2.0;
             path.line_to(x, y);
         }
 
@@ -184,9 +186,10 @@ impl TimeConstantsView {
                         steepness: self.params.steepness.value(),
                         attack: self.params.attack.value() / 1000.0,
                         release: self.params.release.value() / 1000.0,
+                        gain: self.params.gain.value(),
                     },
                 )
-                .expect("gaat goed toooch");
+                .expect("expect no debugging features to be enabled, so no panics either.");
 
             self.envelope.push(self.algo.get_envelope());
         });
@@ -270,13 +273,13 @@ impl View for TimeConstantsView {
                 let (min, max) =
                     extrema.expect("Expect there not be NaN's etc in a plotted graph");
 
-                let max = if min - max == 0.0 {
-                    min + 1.5 / bounds.h
+                let max = if max - min < 2.0 / bounds.h {
+                    max + 4.0 / bounds.h
                 } else {
                     max
                 };
 
-                let y_loc = |y: f32| bounds.y - scale * y * bounds.h / 2.5 + bounds.h / 2.0;
+                let y_loc = |y: f32| bounds.y - scale * y.clamp(-1.0, 1.0) * bounds.h / 2.5 + bounds.h / 2.0;
 
                 path.move_to(x, y_loc(min));
                 path.line_to(x, y_loc(max));

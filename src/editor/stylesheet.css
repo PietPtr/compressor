@@ -6,21 +6,19 @@
 .param_knob {
     width: 70px;
     height: 70px;
-    color: #001aff;
-    space: 10px;
+    space: 5px;
 }
 
 .param_knob_area {
     width: 200px;
     height: 70px;
-    right: 0;
-    left: 0;
+    top: 10px;
 }
 
 label {
     child-space: 1s;
     font-size: 20;
-    color: #d7ceba;
+    color: #e0dbd1;
     right: 0px;
 }
 
@@ -54,14 +52,14 @@ sineview {
     background-color: #f3fa92;
     width: 300px;
     space: 0px;
-    left: 15px;
-    right: 15px;
 }
 
 timeconstants {
     background-color: #f3fa92;
     width: 300px;
     space: 0px;
-    left: 15px;
-    right: 15px;
+}
+
+.scopes {
+    right: 20px;
 }

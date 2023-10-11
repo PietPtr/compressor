@@ -2,16 +2,17 @@ use nih_plug::prelude::Editor;
 use nih_plug_vizia::assets;
 use nih_plug_vizia::vizia::prelude::*;
 use nih_plug_vizia::{create_vizia_editor, ViziaState, ViziaTheming};
+use vizia_scope::ScopeView;
 
 mod knob;
-mod scope;
+mod scopes;
 
 use std::cell::RefCell;
 use std::f32::consts::PI;
 use std::rc::Rc;
 use std::sync::Arc;
 
-use crate::editor::scope::{ScopeView, SineScope, TimeConstantsScope};
+use crate::editor::scopes::{SineScope, TimeConstantsScope};
 use crate::CompressorParams;
 
 use self::knob::{LabelAlignment, ParamKnob};

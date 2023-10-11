@@ -5,8 +5,7 @@ use std::rc::Rc;
 use nih_plug::prelude::Param;
 use nih_plug_vizia::vizia::prelude::*;
 use nih_plug_vizia::widgets::param_base::ParamWidgetBase;
-
-use super::scope::ParamUpdateEvent;
+use vizia_scope::ParamUpdateEvent;
 
 #[derive(Debug)]
 pub enum ParamEvent {

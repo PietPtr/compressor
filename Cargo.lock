@@ -509,6 +509,7 @@ dependencies = [
  "nih_plug",
  "nih_plug_vizia",
  "rand 0.8.5",
+ "vizia_scope",
 ]
 
 [[package]]
@@ -2822,6 +2823,15 @@ dependencies = [
  "bitflags 1.3.2",
  "keyboard-types",
  "vizia_id",
+]
+
+[[package]]
+name = "vizia_scope"
+version = "0.1.0"
+source = "git+https://github.com/PietPtr/vizia_scope.git#e27ed6fcb050feafd7178dbdd6b955e247b70600"
+dependencies = [
+ "femtovg 0.4.0 (git+https://github.com/rhelmot/femtovg?branch=cosmic)",
+ "nih_plug_vizia",
 ]
 
 [[package]]

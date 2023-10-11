@@ -16,9 +16,8 @@
 }
 
 label {
-    child-space: 1s;
     font-size: 20;
-    color: #e0dbd1;
+    color: #e0e0d9;
     right: 0px;
 }
 
@@ -52,14 +51,12 @@ scope {
     background-color: #f3fa92;
     width: 300px;
     height: 150px;
-    space: 0px;
     top: 5px;
     bottom: 5px;
 }
 
-
 .scopes {
-    right: 20px;
+    right: 18px;
     top: 5px;
     bottom: 5px;
 }

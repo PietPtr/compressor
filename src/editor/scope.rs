@@ -281,6 +281,7 @@ impl ScopeData for SineScope {
                         release: 10000.0,
                         gain: self.params.gain.value(),
                     },
+                    None,
                 )
                 .expect("expect no debugging features to be enabled, so no errors either.");
         });
@@ -350,6 +351,7 @@ impl ScopeData for TimeConstantsScope {
                         release: self.params.release.value() / 1000.0,
                         gain: self.params.gain.value(),
                     },
+                    None
                 )
                 .expect("expect no debugging features to be enabled, so no errors either.");
 

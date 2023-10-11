@@ -505,6 +505,7 @@ version = "0.1.0"
 dependencies = [
  "csv",
  "femtovg 0.4.0 (git+https://github.com/rhelmot/femtovg?branch=cosmic)",
+ "llad",
  "nih_plug",
  "nih_plug_vizia",
  "rand 0.8.5",
@@ -1403,6 +1404,15 @@ name = "linux-raw-sys"
 version = "0.4.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3852614a3bd9ca9804678ba6be5e3b8ce76dfc902cae004e3e0c44051b6e88db"
+
+[[package]]
+name = "llad"
+version = "0.1.0"
+source = "git+https://github.com/PietPtr/LLAD.git#18e3eff4721fb3d4803768e456cd631caf37ef6c"
+dependencies = [
+ "csv",
+ "nih_plug",
+]
 
 [[package]]
 name = "lock_api"

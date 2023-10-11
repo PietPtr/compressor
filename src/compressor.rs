@@ -1,9 +1,8 @@
-use crate::csv_debugging::SampleLogger;
+use llad::SampleLogger;
 
 pub struct Algo {
     envelope: f32,
     sample_rate: f32,
-    pub logger: SampleLogger, // TODO: Kinda ugly making this public
 }
 
 #[derive(Debug)]
@@ -21,7 +20,6 @@ impl Algo {
         Self {
             envelope: 0.0,
             sample_rate: 48000.0,
-            logger: SampleLogger::new(),
         }
     }
 
@@ -34,17 +32,20 @@ impl Algo {
         &mut self,
         sample: &mut f32,
         p: RawParameters,
+        mut logger: Option<&mut SampleLogger>,
     ) -> Result<(), &'static str> {
         let attack_slope = 1.0 / (self.sample_rate * p.attack);
         let release_slope = 1.0 / (self.sample_rate * p.release);
 
         let envelope_scaler = 1.0 / (1.0 - p.threshold);
 
-        self.logger.write("sample", *sample)?;
-        self.logger.write("sample.abs()", (*sample).abs())?;
-        self.logger.write("envelope", self.envelope)?;
-        self.logger.write("threshold", p.threshold)?;
-        self.logger.write("-threshold", -p.threshold)?;
+        if let Some(logger) = &mut logger {
+            logger.write("sample", *sample)?;
+            logger.write("sample.abs()", (*sample).abs())?;
+            logger.write("envelope", self.envelope)?;
+            logger.write("threshold", p.threshold)?;
+            logger.write("-threshold", -p.threshold)?;
+        }
 
         let abs_sample = (*sample).abs();
 
@@ -76,8 +77,10 @@ impl Algo {
 
         *sample *= p.gain;
 
-        self.logger.write("mix", mix)?;
-        self.logger.write("after", *sample)?;
+        if let Some(logger) = &mut logger {
+            logger.write("mix", mix)?;
+            logger.write("after", *sample)?;
+        }
 
         Ok(())
     }

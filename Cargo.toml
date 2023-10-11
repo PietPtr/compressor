@@ -19,6 +19,7 @@ nih_plug_vizia = { git = "https://github.com/robbert-vdh/nih-plug.git" }
 csv = "1.1"
 rand = "0.8.5"
 femtovg = { git = "https://github.com/rhelmot/femtovg", branch = "cosmic", default-features = false, features = ["image-loading"] }
+llad = { git = "https://github.com/PietPtr/LLAD.git" }
 
 [features]
 detailed_debugging = []

@@ -1,12 +1,12 @@
 extern crate csv;
 
 use compressor::Algo;
+use llad::SampleLogger;
 use nih_plug::prelude::*;
 use nih_plug_vizia::ViziaState;
 use std::sync::Arc;
 
 mod compressor;
-pub mod csv_debugging;
 mod editor;
 
 #[derive(Params, Debug)]
@@ -35,6 +35,7 @@ pub struct CompressorParams {
 pub struct Compressor {
     params: Arc<CompressorParams>,
     algos: Vec<Algo>,
+    logger: SampleLogger,
 }
 
 impl Compressor {
@@ -45,23 +46,10 @@ impl Compressor {
         _context: &mut impl ProcessContext<Self>,
     ) -> Result<(), &'static str> {
         #[cfg(feature = "detailed_debugging")]
-        self.algos
-            .get_mut(0)
-            .expect("Expect at least one algo present")
-            .logger
-            .set_quit_after_n_samples(self.params.logger_length.value());
+        self.logger
+            .set_quit_after_n_samples(self.params.logger_length.value() as u64);
 
         for channel_samples in buffer.iter_samples() {
-            #[cfg(feature = "detailed_debugging")]
-            {
-                if channel_samples.len() > 1 {
-                    panic!(
-                        "Too many channels for detailed debugging to support: {:?}",
-                        channel_samples.len()
-                    );
-                }
-            }
-
             let threshold = self.params.threshold.smoothed.next();
             let ratio = self.params.ratio.smoothed.next();
             let attack = self.params.attack.smoothed.next() / 1000.0;
@@ -90,6 +78,7 @@ impl Compressor {
                             release,
                             gain,
                         },
+                        if algo_id == 0 { Some(&mut self.logger) } else { None },
                     )?;
                 algo_id += 1;
             }
@@ -104,6 +93,7 @@ impl Default for Compressor {
         Self {
             params: Arc::new(CompressorParams::default()),
             algos: Vec::new(),
+            logger: SampleLogger::new(String::from("debug.csv")),
         }
     }
 }
@@ -253,25 +243,13 @@ impl Plugin for Compressor {
     ) -> ProcessStatus {
         match self.process_buffer(buffer, _aux, _context) {
             Ok(_) => return ProcessStatus::Normal,
-            Err(err) => {
-                // TODO: Also ugly
-                self.algos
-                    .get_mut(0)
-                    .expect("Expect at least one algo present")
-                    .logger
-                    .write_debug_values()
-                    .expect("Error writing CSV file");
-                // Ugly, but easiest way to stop plugin right now...
-                panic!("Processing aborted with: {}", err);
-                // match self.logger.write_debug_values() {
-                //     Ok(_) => return ProcessStatus::Error("Finished detailed debugging."),
-                //     Err(_) => return ProcessStatus::Error(&err),
-                // }
-            }
+            Err(err) => return ProcessStatus::Error(&err),
         }
     }
 
-    fn deactivate(&mut self) {}
+    fn deactivate(&mut self) {
+        self.logger.write_debug_values().expect("Expect CSV writing to be succesful.");
+    }
 }
 
 impl Vst3Plugin for Compressor {

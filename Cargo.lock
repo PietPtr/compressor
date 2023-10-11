@@ -1409,7 +1409,7 @@ checksum = "3852614a3bd9ca9804678ba6be5e3b8ce76dfc902cae004e3e0c44051b6e88db"
 [[package]]
 name = "llad"
 version = "0.1.0"
-source = "git+https://github.com/PietPtr/LLAD.git#18e3eff4721fb3d4803768e456cd631caf37ef6c"
+source = "git+https://github.com/PietPtr/LLAD.git?branch=main#ca72da754bd7e4376edf5ac31db3f088e9d9be82"
 dependencies = [
  "csv",
  "nih_plug",
@@ -2828,7 +2828,7 @@ dependencies = [
 [[package]]
 name = "vizia_scope"
 version = "0.1.0"
-source = "git+https://github.com/PietPtr/vizia_scope.git#e27ed6fcb050feafd7178dbdd6b955e247b70600"
+source = "git+https://github.com/PietPtr/vizia_scope.git?branch=main#2a5b75219fd420c44d64fec45435a3fd9de073b4"
 dependencies = [
  "femtovg 0.4.0 (git+https://github.com/rhelmot/femtovg?branch=cosmic)",
  "nih_plug_vizia",

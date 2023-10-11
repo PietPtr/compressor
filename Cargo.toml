@@ -17,10 +17,11 @@ nih_plug_vizia = { git = "https://github.com/robbert-vdh/nih-plug.git" }
 csv = "1.1"
 rand = "0.8.5"
 femtovg = { git = "https://github.com/rhelmot/femtovg", branch = "cosmic", default-features = false, features = ["image-loading"] }
-llad = { git = "https://github.com/PietPtr/LLAD.git" }
-vizia_scope = { git = "https://github.com/PietPtr/vizia_scope.git" }
+llad = { git = "https://github.com/PietPtr/LLAD.git", branch = "main"}
+vizia_scope = { git = "https://github.com/PietPtr/vizia_scope.git", branch = "main" }
 
 [features]
+default = []
 detailed_debugging = []
 
 [profile.release]

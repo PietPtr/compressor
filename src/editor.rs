@@ -34,7 +34,7 @@ pub(crate) fn create(
     params: Arc<CompressorParams>,
     editor_state: Arc<ViziaState>,
 ) -> Option<Box<dyn Editor>> {
-    create_vizia_editor(editor_state, ViziaTheming::Builtin, move |cx, _| {
+    create_vizia_editor(Arc::clone(&editor_state), ViziaTheming::Builtin, move |cx, _| {
         assets::register_noto_sans_light(cx);
         assets::register_noto_sans_thin(cx);
 
@@ -88,7 +88,7 @@ pub(crate) fn create(
                                 .map(|i| (i as f32 / (width as f32 / (2.0 * PI * 1.0))).sin())
                                 .collect()
                         }),
-                        300,
+                        300 * editor_state.scaled_logical_size().0 as usize,
                     ),
                     None,
                 )

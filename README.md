@@ -1,7 +1,19 @@
 ![Compressor](resources/gui.png)
 
 # Compressor
-Custom compressor to learn VST3 plugin development. Build VST3 plugin with `make build`. All other make targets are debug builds.
+Custom compressor to learn VST3 plugin development. Build VST3 plugin with `make build`. All other make targets are debug builds. The compressor has six parameters:
+
+* Threshold: Level above which to start compressing.
+
+* Ratio: Amount of compression
+
+* Steepness: measure of quickly the compression engages. A low steepness means that as the actual audio level approaches the threshold the compressor will gradually already engage. A high steepness will bemore like the compressor engaging not at all under the threshold and immediately after it goes overthe threshold. It is a measure of how smooth the knee is.
+
+* Attack: Time in ms until the compressor fully engages.
+
+* Release: Time in ms until the compressor is fully disengaged.
+
+* Gain: gain to apply after compression.
 
 # Plugalyzer
 Requires [Plugalyzer](https://github.com/CrushedPixel/Plugalyzer) for certain make targets used for low level debugging, e.g. `make triangle`, which plots some small amount of samples and other debug values using matplotlib:

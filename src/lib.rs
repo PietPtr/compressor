@@ -1,3 +1,14 @@
+//! VST3 plugin implementing an audio compressor with six parameters:
+//! * Threshold: Level above which to start compressing.
+//! * Ratio: Amount of compression
+//! * Steepness: measure of quickly the compression engages. A low steepness means that as the actual audio
+//!     level approaches the threshold the compressor will gradually already engage. A high steepness will be
+//!     more like the compressor engaging not at all under the threshold and immediately after it goes over
+//!     the threshold. It is a measure of how smooth the knee is.
+//! * Attack: Time in ms until the compressor fully engages.
+//! * Release: Time in ms until the compressor is fully disengaged.
+//! * Gain: gain to apply after compression.
+
 extern crate csv;
 
 use compressor::Algo;
@@ -10,6 +21,7 @@ use std::sync::Arc;
 mod compressor;
 mod editor;
 
+/// Parameters for the compressor.
 #[derive(Params, Debug)]
 pub struct CompressorParams {
     #[persist = "editor-state"]
@@ -33,6 +45,7 @@ pub struct CompressorParams {
     pub logger_length: FloatParam,
 }
 
+/// Struct implementing [`nih_plug::prelude::Plugin`].
 pub struct Compressor {
     params: Arc<CompressorParams>,
     algos: Vec<Algo>,
@@ -41,6 +54,7 @@ pub struct Compressor {
 }
 
 impl Compressor {
+    // TODO: move back into process?
     fn process_buffer(
         &mut self,
         buffer: &mut Buffer,
@@ -192,7 +206,7 @@ impl Default for CompressorParams {
             #[cfg(feature = "detailed_debugging")]
             logger_length: FloatParam::new(
                 "LoggerLength",
-                5000.0,
+                0.0,
                 FloatRange::Linear {
                     min: 0.0,
                     max: u64::MAX as f32,
@@ -203,6 +217,9 @@ impl Default for CompressorParams {
 }
 
 impl Plugin for Compressor {
+    #[cfg(feature = "detailed_debugging")]
+    const NAME: &'static str = "Compressor (debug)";
+    #[cfg(not(feature = "detailed_debugging"))]
     const NAME: &'static str = "Compressor";
     const VENDOR: &'static str = "Staal";
     const URL: &'static str = "example.com";

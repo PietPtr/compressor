@@ -34,11 +34,6 @@ impl Algo {
         p: RawParameters,
         mut logger: Option<&mut SampleLogger>,
     ) -> Result<(), &'static str> {
-        let attack_slope = 1.0 / (self.sample_rate * p.attack);
-        let release_slope = 1.0 / (self.sample_rate * p.release);
-
-        let envelope_scaler = 1.0 / (1.0 - p.threshold);
-
         if let Some(logger) = &mut logger {
             logger.write("sample", *sample)?;
             logger.write("sample.abs()", (*sample).abs())?;
@@ -46,6 +41,11 @@ impl Algo {
             logger.write("threshold", p.threshold)?;
             logger.write("-threshold", -p.threshold)?;
         }
+
+        let attack_slope = 1.0 / (self.sample_rate * p.attack);
+        let release_slope = 1.0 / (self.sample_rate * p.release);
+
+        let envelope_scaler = 1.0 / (1.0 - p.threshold);
 
         let abs_sample = (*sample).abs();
 

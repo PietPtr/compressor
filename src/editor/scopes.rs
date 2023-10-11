@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{sync::Arc, f32::consts::PI, time::{Instant, Duration}};
 
 use nih_plug_vizia::vizia::vg::Color;
 use vizia_scope::{ScopeData, ScopeLine, ConstantLine, SignalLine, AudioLine};
@@ -102,8 +102,8 @@ impl TimeConstantsScope {
             params: parameters,
             algo: compressor::Algo::new(),
             amount_of_samples,
-            samples: Vec::new(),
-            envelope: Vec::new(),
+            samples: Vec::with_capacity(amount_of_samples),
+            envelope: Vec::with_capacity(amount_of_samples),
             base_waveform,
         }
     }
@@ -157,4 +157,46 @@ impl ScopeData for TimeConstantsScope {
             )),
         ]
     }
+}
+
+
+#[test]
+fn benchmark_timeconstants_scope_recalculate() {
+    let params = Arc::new(CompressorParams::default());
+    let mut scope = TimeConstantsScope::new(
+        Arc::clone(&params),
+        Box::new(|width| {
+            let mut samples = Vec::with_capacity(width as usize);
+            for _ in 0..width / 8 {
+                samples.push(0.0);
+            }
+            for i in 0..width / 4 {
+                samples.push((i as f32 / (width as f32 / (2.0 * PI * 1024.0))).sin());
+            }
+            for _ in 0..width / 4 {
+                samples.push(0.0);
+            }
+            for i in 0..(width / 8) * 3 {
+                samples.push((i as f32 / (width as f32 / (2.0 * PI * 1024.0))).sin());
+            }
+            samples
+        }),
+        15000,
+    );
+
+    let mut function_to_benchmark = || {
+        scope.recalculate();
+    };
+
+    let start = Instant::now();
+    let iterations = 1000;  // Adjust the number of iterations as needed
+
+    for _ in 0..iterations {
+        function_to_benchmark();
+    }
+
+    let duration = start.elapsed();
+    let average = duration / iterations;
+    println!("Time on average: {:?}", average);
+
 }

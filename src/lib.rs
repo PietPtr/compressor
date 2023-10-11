@@ -1,6 +1,7 @@
 extern crate csv;
 
 use compressor::Algo;
+#[cfg(feature = "detailed_debugging")]
 use llad::SampleLogger;
 use nih_plug::prelude::*;
 use nih_plug_vizia::ViziaState;
@@ -35,6 +36,7 @@ pub struct CompressorParams {
 pub struct Compressor {
     params: Arc<CompressorParams>,
     algos: Vec<Algo>,
+    #[cfg(feature = "detailed_debugging")]
     logger: SampleLogger,
 }
 
@@ -78,7 +80,14 @@ impl Compressor {
                             release,
                             gain,
                         },
-                        if algo_id == 0 { Some(&mut self.logger) } else { None },
+                        #[cfg(feature = "detailed_debugging")]
+                        if algo_id == 0 {
+                            Some(&mut self.logger)
+                        } else {
+                            None
+                        },
+                        #[cfg(not(feature = "detailed_debugging"))]
+                        None
                     )?;
                 algo_id += 1;
             }
@@ -93,6 +102,7 @@ impl Default for Compressor {
         Self {
             params: Arc::new(CompressorParams::default()),
             algos: Vec::new(),
+            #[cfg(feature = "detailed_debugging")]
             logger: SampleLogger::new(String::from("debug.csv")),
         }
     }
@@ -248,7 +258,10 @@ impl Plugin for Compressor {
     }
 
     fn deactivate(&mut self) {
-        self.logger.write_debug_values().expect("Expect CSV writing to be succesful.");
+        #[cfg(feature = "detailed_debugging")]
+        self.logger
+            .write_debug_values()
+            .expect("Expect CSV writing to be succesful.");
     }
 }
 

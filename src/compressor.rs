@@ -23,7 +23,7 @@ impl Algo {
         }
     }
 
-    pub fn reset(&mut self) {
+    pub fn _reset(&mut self) {
         self.envelope = 0.0;
         self.sample_rate = 48000.0;
     }
@@ -85,7 +85,7 @@ impl Algo {
         Ok(())
     }
 
-    pub fn get_envelope(&self) -> f32 {
+    pub fn _get_envelope(&self) -> f32 {
         return self.envelope;
     }
 }

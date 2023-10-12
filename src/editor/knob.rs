@@ -1,11 +1,8 @@
-use std::cell::RefCell;
 use std::fmt;
-use std::rc::Rc;
 
 use nih_plug::prelude::Param;
 use nih_plug_vizia::vizia::prelude::*;
 use nih_plug_vizia::widgets::param_base::ParamWidgetBase;
-use vizia_scope::ParamUpdateEvent;
 
 #[derive(Debug)]
 pub enum ParamEvent {
@@ -32,13 +29,11 @@ impl fmt::Display for LabelAlignment {
 #[derive(Clone)]
 pub struct ParamKnobConfiguration {
     pub label_align: LabelAlignment,
-    pub listeners: Vec<Entity>,
 }
 
 #[derive(Lens)]
 pub struct ParamKnob {
     param_base: ParamWidgetBase,
-    listeners: Rc<RefCell<Vec<Entity>>>,
 }
 
 impl ParamKnob {
@@ -47,7 +42,6 @@ impl ParamKnob {
         params: L,
         params_to_param: FMap,
         label_align: LabelAlignment,
-        listeners: Rc<RefCell<Vec<Entity>>>,
         centered_track: bool,
     ) -> Handle<Self>
     where
@@ -58,7 +52,6 @@ impl ParamKnob {
     {
         Self {
             param_base: ParamWidgetBase::new(cx, params.clone(), params_to_param),
-            listeners,
         }
         .build(
             cx,
@@ -159,9 +152,6 @@ impl View for ParamKnob {
                 self.param_base.begin_set_parameter(cx);
             }
             ParamEvent::SetParam(val) => {
-                for &listener in self.listeners.borrow().iter() {
-                    cx.emit_to(listener, ParamUpdateEvent::ParamUpdate);
-                }
                 self.param_base.set_normalized_value(cx, *val);
             }
             ParamEvent::EndSetParam => {

@@ -220,7 +220,7 @@ impl Plugin for Compressor {
     #[cfg(feature = "detailed_debugging")]
     const NAME: &'static str = "Compressor (debug)";
     #[cfg(not(feature = "detailed_debugging"))]
-    const NAME: &'static str = "Compressor";
+    const NAME: &'static str = "Compressor (scopeless)";
     const VENDOR: &'static str = "Staal";
     const URL: &'static str = "example.com";
     const EMAIL: &'static str = "info@example.com";

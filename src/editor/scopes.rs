@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{sync::Arc, time::{Instant, Duration}};
 
 use nih_plug_vizia::vizia::vg::Color;
 use vizia_scope::{ScopeData, ScopeLine, ConstantLine, SignalLine, AudioLine};
@@ -90,7 +90,10 @@ pub struct TimeConstantsScope {
     samples: Vec<f32>,
     envelope: Vec<f32>,
     base_waveform: Box<dyn Fn(usize) -> Vec<f32>>,
+    last_recalc: Instant,
 }
+
+const DEBOUNCE_TIME_MS: u64 = 33;
 
 impl TimeConstantsScope {
     pub fn new(
@@ -105,12 +108,21 @@ impl TimeConstantsScope {
             samples: Vec::with_capacity(amount_of_samples),
             envelope: Vec::with_capacity(amount_of_samples),
             base_waveform,
+            last_recalc: Instant::now() - Duration::from_millis(DEBOUNCE_TIME_MS),
         }
     }
 }
 
 impl ScopeData for TimeConstantsScope {
     fn recalculate(&mut self) {
+        let now = Instant::now();
+    
+        if now.duration_since(self.last_recalc) < Duration::from_millis(DEBOUNCE_TIME_MS) {
+            return; // Don't recalculate if we already did so early enough.
+        }
+
+        dbg!(now.duration_since(self.last_recalc));
+        
         self.samples = (self.base_waveform)(self.amount_of_samples);
         self.envelope = Vec::with_capacity(self.amount_of_samples as usize);
 
@@ -134,6 +146,8 @@ impl ScopeData for TimeConstantsScope {
 
             self.envelope.push(-self.algo.get_envelope());
         });
+
+        self.last_recalc = now;
     }
 
     fn scope_lines(&self) -> Vec<ScopeLine> {

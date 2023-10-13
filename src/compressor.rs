@@ -86,6 +86,6 @@ impl Algo {
     }
 
     pub fn get_envelope(&self) -> f32 {
-        return self.envelope;
+        self.envelope
     }
 }

@@ -2,9 +2,11 @@
 all: build
 
 build:
+	cargo clippy
 	cargo xtask bundle compressor --release
 
 debug:
+	cargo clippy
 	cargo xtask bundle compressor --release --features "detailed_debugging"
 
 gui: build

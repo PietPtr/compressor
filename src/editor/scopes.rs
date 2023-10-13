@@ -8,9 +8,16 @@ use crate::{
     CompressorParams,
 };
 
-const SIGNAL_COLOR: Color = Color::rgbf(243.0 / 255.0, 250.0 / 255.0, 146.0 / 255.0);
-const THRESHOLD_COLOR: Color = Color::rgbf(163.0 / 255.0, 144.0 / 255.0, 95.0 / 255.0);
-const ENEVELOPE_COLOR: Color = Color::rgbf(255.0 / 255.0, 137.0 / 255.0, 137.0 / 255.0);
+macro_rules! to_color {
+    ($r:expr, $g:expr, $b:expr) => {
+        Color::rgbf($r as f32 / 255.0, $g as f32 / 255.0, $b as f32 / 255.0)
+    };
+}
+
+const SIGNAL_COLOR: Color = to_color!(243, 250, 146);
+const THRESHOLD_COLOR: Color = to_color!(163, 144, 95);
+const ENVELOPE_COLOR: Color = to_color!(255, 137, 137);
+
 
 pub struct SineScope {
     params: Arc<CompressorParams>,
@@ -120,11 +127,9 @@ impl ScopeData for TimeConstantsScope {
         if now.duration_since(self.last_recalc) < Duration::from_millis(DEBOUNCE_TIME_MS) {
             return; // Don't recalculate if we already did so early enough.
         }
-
-        dbg!(now.duration_since(self.last_recalc));
         
         self.samples = (self.base_waveform)(self.amount_of_samples);
-        self.envelope = Vec::with_capacity(self.amount_of_samples as usize);
+        self.envelope = Vec::with_capacity(self.amount_of_samples);
 
         self.algo.reset();
 
@@ -166,7 +171,7 @@ impl ScopeData for TimeConstantsScope {
             )),
             ScopeLine::Signal(SignalLine::new(
                 &self.envelope,
-                ENEVELOPE_COLOR,
+                ENVELOPE_COLOR,
                 1.5,
             )),
         ]

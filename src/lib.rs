@@ -79,12 +79,11 @@ impl Compressor {
 
             assert!(channel_samples.len() == self.algos.len());
 
-            let mut algo_id = 0;
-            for sample in channel_samples {
+            for (algo_id, sample) in channel_samples.into_iter().enumerate() {
                 self.algos
                     .get_mut(algo_id)
-                    .expect(format!("Expect algo id {algo_id} to be present.").as_str())
-                    .process_samples(
+                    .unwrap_or_else(|| panic!("Expect algo id {algo_id} to be present."))
+                    .process_samples(                
                         sample,
                         compressor::RawParameters {
                             threshold,
@@ -103,7 +102,6 @@ impl Compressor {
                         #[cfg(not(feature = "detailed_debugging"))]
                         None
                     )?;
-                algo_id += 1;
             }
         }
 
@@ -269,8 +267,8 @@ impl Plugin for Compressor {
         _context: &mut impl ProcessContext<Self>,
     ) -> ProcessStatus {
         match self.process_buffer(buffer, _aux, _context) {
-            Ok(_) => return ProcessStatus::Normal,
-            Err(err) => return ProcessStatus::Error(&err),
+            Ok(_) => ProcessStatus::Normal,
+            Err(err) => ProcessStatus::Error(err),
         }
     }
 

@@ -9,9 +9,9 @@ use vizia_scope::ParamUpdateEvent;
 
 #[derive(Debug)]
 pub enum ParamEvent {
-    BeginSetParam,
-    SetParam(f32),
-    EndSetParam,
+    Begin,
+    Change(f32),
+    End,
 }
 
 #[derive(Copy, Clone)]
@@ -57,7 +57,7 @@ impl ParamKnob {
         FMap: Fn(&Params) -> &P + Copy + 'static,
     {
         Self {
-            param_base: ParamWidgetBase::new(cx, params.clone(), params_to_param),
+            param_base: ParamWidgetBase::new(cx, params, params_to_param),
             listeners,
         }
         .build(
@@ -124,13 +124,13 @@ impl ParamKnob {
                             },
                         )
                         .on_mouse_down(move |cx, _button| {
-                            cx.emit(ParamEvent::BeginSetParam);
+                            cx.emit(ParamEvent::Begin);
                         })
                         .on_changing(move |cx, val| {
-                            cx.emit(ParamEvent::SetParam(val));
+                            cx.emit(ParamEvent::Change(val));
                         })
                         .on_mouse_up(move |cx, _button| {
-                            cx.emit(ParamEvent::EndSetParam);
+                            cx.emit(ParamEvent::End);
                         })
                         .class("param_knob")
                     };
@@ -155,16 +155,16 @@ impl ParamKnob {
 impl View for ParamKnob {
     fn event(&mut self, cx: &mut EventContext, event: &mut Event) {
         event.map(|param_change_event, _| match param_change_event {
-            ParamEvent::BeginSetParam => {
+            ParamEvent::Begin => {
                 self.param_base.begin_set_parameter(cx);
             }
-            ParamEvent::SetParam(val) => {
+            ParamEvent::Change(val) => {
                 for &listener in self.listeners.borrow().iter() {
                     cx.emit_to(listener, ParamUpdateEvent::ParamUpdate);
                 }
                 self.param_base.set_normalized_value(cx, *val);
             }
-            ParamEvent::EndSetParam => {
+            ParamEvent::End => {
                 self.param_base.end_set_parameter(cx);
             }
         });
